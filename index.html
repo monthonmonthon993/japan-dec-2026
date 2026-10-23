@@ -1,0 +1,875 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Japan Dec 2026 — ครอบครัว Sangsinsup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@500;600;700&family=Noto+Sans+Thai:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<style>
+/* Layout: photo hero → 3D map tour (map + stop card) → day picker → bookings / checklist panels.
+   Light snow ground with a soft pastel mesh; each trip phase owns one vivid gradient. */
+:root {
+  --bg: #f7f7fb;
+  --surface: #ffffff;
+  --ink: #171a2b;
+  --muted: #5f6478;
+  --line: #e6e7ef;
+  --g-tk: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
+  --g-ks: linear-gradient(135deg, #f43f5e 0%, #f59e0b 100%);
+  --g-sh: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+  --g-ks2: linear-gradient(135deg, #d946ef 0%, #f97316 100%);
+  --g-brand: linear-gradient(120deg, #6366f1 0%, #d946ef 50%, #f97316 100%);
+  --c-tk: #4f46e5; --c-ks: #e11d48; --c-sh: #059669; --c-ks2: #c026d3;
+  --ok: #059669; --now: #e11d48; --wait: #d97706; --none: #64748b;
+  --radius: 20px;
+  --shadow: 0 10px 30px -12px rgba(40, 30, 90, .25);
+  --font-display: "Bai Jamjuree", "Noto Sans Thai", system-ui, sans-serif;
+  --font-body: "Noto Sans Thai", system-ui, -apple-system, sans-serif;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 64px; }
+body {
+  margin: 0; color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.6;
+  background:
+    radial-gradient(60vw 50vw at 0% 30%, rgba(99, 102, 241, .10), transparent 70%),
+    radial-gradient(50vw 50vw at 100% 55%, rgba(244, 63, 94, .08), transparent 70%),
+    radial-gradient(60vw 40vw at 30% 95%, rgba(16, 185, 129, .08), transparent 70%),
+    var(--bg);
+}
+img { max-width: 100%; display: block; }
+a { color: var(--c-tk); }
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.2; text-wrap: balance; margin: 0; }
+h2 { font-size: clamp(1.6rem, 4vw, 2.3rem); }
+h3 { font-size: 1.2rem; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.eyebrow { margin: 0 0 4px; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.grad { background: var(--g-brand); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.fine { font-size: .8rem; color: var(--muted); }
+:focus-visible { outline: 3px solid #a5b4fc; outline-offset: 2px; border-radius: 8px; }
+[hidden] { display: none !important; }
+
+/* nav */
+nav.top { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  background: rgba(247, 247, 251, .78); border-bottom: 1px solid var(--line); padding-top: env(safe-area-inset-top, 0px); }
+nav.top .wrap { display: flex; align-items: center; gap: 16px; height: 56px; }
+.brand { font-family: var(--font-display); font-weight: 700; color: var(--ink); text-decoration: none; white-space: nowrap; }
+.links { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; margin-left: auto; }
+.links a { color: var(--muted); text-decoration: none; font-size: .9rem; padding: 6px 12px; border-radius: 999px; white-space: nowrap; }
+.links a:hover { background: var(--surface); color: var(--ink); }
+.links a.pres { background: var(--g-brand); color: #fff; font-weight: 600; }
+
+/* hero */
+.hero { position: relative; color: #fff; overflow: hidden; padding-bottom: 28px; }
+.hero-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hero::before { content: ""; position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(160deg, rgba(79, 70, 229, .55) 0%, rgba(217, 70, 239, .35) 45%, rgba(23, 26, 43, .75) 100%); }
+.hero > :not(.hero-img) { position: relative; z-index: 2; }
+.hero-in { padding-block: clamp(64px, 12vw, 140px) 32px; }
+.hero .eyebrow { color: rgba(255, 255, 255, .85); }
+.hero h1 { font-size: clamp(2.4rem, 8vw, 4.8rem); font-weight: 700; letter-spacing: -.01em; }
+.hero h1 .grad { background: linear-gradient(120deg, #fde68a, #fbcfe8, #a5f3fc); -webkit-background-clip: text; background-clip: text; }
+.hero-sub { margin: 8px 0 24px; font-size: 1.05rem; opacity: .92; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 12px 20px; border-radius: 999px; font-weight: 600; text-decoration: none;
+  font-family: var(--font-display); transition: transform .15s ease, box-shadow .15s ease; }
+.btn:hover { transform: translateY(-2px); }
+.btn.primary { background: #fff; color: var(--ink); box-shadow: 0 8px 24px rgba(0, 0, 0, .25); }
+.btn.glass { background: rgba(255, 255, 255, .16); color: #fff; border: 1px solid rgba(255, 255, 255, .45); backdrop-filter: blur(8px); }
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.fact { background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .3); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-radius: 16px; padding: 12px 14px; display: grid; }
+.fact b { font-family: var(--font-display); font-size: 1.9rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.fact span { font-size: .82rem; opacity: .9; }
+
+main > section { padding-block: 56px 8px; }
+.sec-head { margin-bottom: 18px; }
+
+/* 3D tour */
+.tour { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; align-items: stretch; }
+.map-frame { position: relative; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); min-height: 520px;
+  background: var(--g-tk); }
+#map3d { position: absolute; inset: 0; }
+#map3d.nomap::after { content: "เครื่องนี้แสดงแผนที่ 3D ไม่ได้ — กดจุดด้านล่างดูการ์ดแทน"; padding: 24px; text-align: center; position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-weight: 600; }
+.map-ctl { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; gap: 6px; z-index: 5;
+  background: rgba(255, 255, 255, .85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 6px; border-radius: 999px; box-shadow: var(--shadow); }
+.map-ctl button { font: inherit; border: 0; background: transparent; color: var(--ink); padding: 8px 12px; border-radius: 999px; cursor: pointer; font-weight: 600; }
+.map-ctl button:hover { background: #eef0ff; }
+.map-ctl .play { background: var(--g-brand); color: #fff; padding-inline: 18px; }
+.map-ctl .play.on { background: #171a2b; }
+.pin { border: 0; padding: 0; background: none; cursor: pointer; display: grid; justify-items: center; }
+.pin img { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; box-shadow: 0 4px 14px rgba(0, 0, 0, .35); transition: transform .2s; }
+.pin b { margin-top: -10px; min-width: 22px; height: 22px; border-radius: 999px; color: #fff; font-size: .75rem; display: grid; place-items: center; padding: 0 6px; border: 2px solid #fff; }
+.pin:hover img { transform: scale(1.12); }
+.pin.tk b { background: var(--g-tk); } .pin.ks b { background: var(--g-ks); } .pin.sh b { background: var(--g-sh); } .pin.ks2 b { background: var(--g-ks2); }
+.tcards { min-width: 0; }
+.tcard { background: var(--surface); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); height: 100%; display: flex; flex-direction: column;
+  animation: rise .35s ease-out; }
+.tcard-img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
+.tcard-body { padding: 16px 18px 18px; display: grid; gap: 8px; position: relative; }
+.tcard-body::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 4px; }
+.tcard.tk .tcard-body::before { background: var(--g-tk); } .tcard.ks .tcard-body::before { background: var(--g-ks); }
+.tcard.sh .tcard-body::before { background: var(--g-sh); } .tcard.ks2 .tcard-body::before { background: var(--g-ks2); }
+.tcard h3 { font-size: 1.4rem; }
+.tcard p { margin: 0; color: var(--muted); }
+.link { font-weight: 600; text-decoration: none; }
+.stops { position: relative; display: flex; gap: 10px; overflow-x: auto; padding: 14px 2px 6px; scrollbar-width: thin; }
+.stop { flex: none; position: relative; border: 0; padding: 0; background: none; cursor: pointer; border-radius: 16px; }
+.stop img { width: 72px; height: 72px; border-radius: 16px; object-fit: cover; opacity: .7; transition: opacity .2s, transform .2s; }
+.stop span { position: absolute; left: 6px; top: 6px; min-width: 22px; height: 22px; border-radius: 999px; color: #fff; font-size: .75rem; font-weight: 700; display: grid; place-items: center; }
+.stop.tk span { background: var(--g-tk); } .stop.ks span { background: var(--g-ks); } .stop.sh span { background: var(--g-sh); } .stop.ks2 span { background: var(--g-ks2); }
+.stop:hover img { opacity: 1; }
+.stop.on img { opacity: 1; transform: translateY(-3px); box-shadow: 0 0 0 3px #fff, 0 0 0 6px #a5b4fc; }
+
+/* shared highlight list */
+.hl { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.hl li { display: grid; grid-template-columns: 24px 52px 1fr; gap: 6px; align-items: baseline; font-size: .95rem; }
+.hl .tm { font-variant-numeric: tabular-nums; color: var(--muted); font-size: .85rem; }
+
+/* day picker */
+.dchips { position: relative; display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 10px; scrollbar-width: none; }
+.dchip { flex: none; width: 58px; padding: 8px 0; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); cursor: pointer;
+  display: grid; justify-items: center; font: inherit; color: var(--ink); transition: transform .15s; }
+.dchip b { font-family: var(--font-display); font-size: 1.35rem; line-height: 1.1; }
+.dchip span { font-size: .75rem; color: var(--muted); }
+.dchip:hover { transform: translateY(-2px); }
+.dchip.on { border-color: transparent; color: #fff; box-shadow: var(--shadow); }
+.dchip.on span { color: rgba(255, 255, 255, .9); }
+.dchip.tk.on { background: var(--g-tk); } .dchip.ks.on { background: var(--g-ks); } .dchip.sh.on { background: var(--g-sh); } .dchip.ks2.on { background: var(--g-ks2); }
+.dchip.tk { border-bottom: 3px solid var(--c-tk); } .dchip.ks { border-bottom: 3px solid var(--c-ks); }
+.dchip.sh { border-bottom: 3px solid var(--c-sh); } .dchip.ks2 { border-bottom: 3px solid var(--c-ks2); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .82rem; color: var(--muted); margin-bottom: 14px; }
+.legend i { display: inline-block; width: 18px; height: 8px; border-radius: 4px; margin-right: 6px; vertical-align: middle; }
+.legend .tk i { background: var(--g-tk); } .legend .ks i { background: var(--g-ks); } .legend .sh i { background: var(--g-sh); } .legend .ks2 i { background: var(--g-ks2); }
+.day { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); background: var(--surface); border-radius: var(--radius); overflow: hidden;
+  box-shadow: var(--shadow); animation: rise .35s ease-out; }
+.day-media { position: relative; min-height: 280px; }
+.day-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.day-img.blank { display: grid; place-items: center; font-size: 4rem; color: #fff; }
+.day.tk .day-img.blank { background: var(--g-tk); } .day.ks2 .day-img.blank { background: var(--g-ks2); }
+.day-n { position: absolute; left: 14px; top: 14px; color: #fff; font-family: var(--font-display); font-weight: 700; padding: 6px 14px; border-radius: 999px; }
+.day.tk .day-n { background: var(--g-tk); } .day.ks .day-n { background: var(--g-ks); } .day.sh .day-n { background: var(--g-sh); } .day.ks2 .day-n { background: var(--g-ks2); }
+.day-body { padding: 22px 24px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.day h3 { font-size: 1.5rem; }
+.stay { margin: 0; font-size: .9rem; color: var(--muted); }
+details.more { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 4px; }
+details.more > summary { cursor: pointer; font-weight: 600; color: var(--c-tk); list-style: none; padding: 6px 0; }
+details.more > summary::-webkit-details-marker { display: none; }
+details.more > summary::before { content: "＋ "; }
+details.more[open] > summary::before { content: "－ "; }
+.full { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 10px; }
+.full li { display: grid; grid-template-columns: 52px 1fr; gap: 8px; font-size: .92rem; }
+.full .tm { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--muted); }
+.bnote { font-size: .82rem; color: var(--muted); margin-top: 2px; }
+.bnote.warn { color: #b45309; background: #fff7ed; border-radius: 8px; padding: 4px 8px; }
+
+/* panels */
+.bgrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 16px; align-items: start; }
+.side { display: grid; gap: 16px; min-width: 0; }
+.panel { background: var(--surface); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); min-width: 0; }
+.panel > h3 { margin: 4px 0 10px; }
+.panel > h3 + h3, .panel details + h3 { margin-top: 18px; }
+.panel.done { background: var(--g-sh); color: #fff; }
+.panel.done a { color: #fff; }
+.donelist { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.donelist li { display: grid; grid-template-columns: 28px 1fr; gap: 8px; }
+.donelist small { display: block; opacity: .85; font-size: .82rem; }
+.ok { width: 26px; height: 26px; border-radius: 50%; background: rgba(255, 255, 255, .25); display: grid; place-items: center; font-weight: 700; }
+.chip { display: inline-block; font-size: .8rem; font-weight: 600; padding: 3px 12px; border-radius: 999px; color: #fff; font-family: var(--font-body); }
+.chip.now { background: var(--g-ks); } .chip.wait { background: linear-gradient(135deg, #f59e0b, #facc15); color: #422006; } .chip.none { background: #e2e8f0; color: #334155; }
+.bk { border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; background: #fafaff; border: 1px solid var(--line); }
+.bk > summary { cursor: pointer; list-style: none; display: grid; gap: 2px; }
+.bk > summary::-webkit-details-marker { display: none; }
+.bk-t { font-weight: 600; }
+.bk-d { font-size: .82rem; color: var(--muted); }
+.bk-d em { font-style: normal; font-weight: 600; }
+.bk.now .bk-d em { color: var(--now); } .bk.wait .bk-d em { color: var(--wait); }
+.bk[open] { background: var(--surface); box-shadow: var(--shadow); }
+.bk dl { display: grid; grid-template-columns: 70px 1fr; gap: 4px 10px; margin: 10px 0 6px; font-size: .88rem; }
+.bk dt { color: var(--muted); }
+.bk dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.bk-n { font-size: .85rem; color: var(--muted); margin: 0; }
+.tw { overflow-x: auto; }
+table.cost { width: 100%; border-collapse: collapse; font-size: .9rem; }
+table.cost td { padding: 6px 4px; border-bottom: 1px solid var(--line); }
+table.cost .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.cost .tot td { font-weight: 700; border-bottom: 0; }
+
+/* checklist */
+.check { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.check label { display: grid; grid-template-columns: 28px 1fr; gap: 10px; padding: 10px 8px; border-radius: 12px; cursor: pointer; }
+.check label:hover { background: #f5f5ff; }
+.check input { position: absolute; opacity: 0; pointer-events: none; }
+.check .box { width: 24px; height: 24px; border-radius: 8px; border: 2px solid #c7c9d9; display: grid; place-items: center; transition: all .15s; margin-top: 2px; }
+.check li.hi .box { border-color: var(--now); }
+.check input:checked + .box { background: var(--g-sh); border-color: transparent; }
+.check input:checked + .box::after { content: "✓"; color: #fff; font-weight: 700; font-size: .85rem; }
+.check input:checked ~ .txt { opacity: .45; text-decoration: line-through; }
+.check input:focus-visible + .box { outline: 3px solid #a5b4fc; outline-offset: 2px; }
+.check .txt { min-width: 0; }
+.check small { display: block; color: var(--muted); font-size: .82rem; }
+.due { display: inline-block; margin-left: 8px; font-size: .75rem; font-weight: 600; color: #fff; background: var(--g-ks); padding: 1px 8px; border-radius: 999px; vertical-align: middle; }
+.panel.grad-ks { background: var(--g-ks); color: #fff; }
+.timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.timeline li { display: grid; grid-template-columns: 64px 56px 1fr; gap: 6px; align-items: baseline; font-size: .92rem; }
+.timeline b { font-family: var(--font-display); }
+.timeline .tm { font-variant-numeric: tabular-nums; opacity: .85; }
+.qs { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.tips { margin: 6px 0 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-top: 8px; }
+.pg { background: var(--surface); border-radius: 16px; padding: 14px; box-shadow: var(--shadow); min-width: 0; }
+.pg h4 { font-size: 1rem; margin-bottom: 6px; }
+.pg ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.pg small { display: block; color: var(--muted); font-size: .8rem; }
+#todo > details.more { margin-top: 16px; }
+
+footer { padding-block: 48px calc(32px + env(safe-area-inset-bottom, 0px)); color: var(--muted); font-size: .88rem; }
+footer a { color: inherit; }
+
+@keyframes rise { from { opacity: .4; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } html { scroll-behavior: auto; } }
+
+@media (max-width: 900px) {
+  .tour { grid-template-columns: minmax(0, 1fr); }
+  .map-frame { min-height: 420px; }
+  .bgrid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .day { grid-template-columns: minmax(0, 1fr); }
+  .day-media { min-height: 200px; }
+  .map-frame { min-height: 360px; }
+  nav.top .wrap { gap: 10px; }
+  .brand { font-size: .9rem; }
+  .links { mask-image: linear-gradient(90deg, #000 85%, transparent); -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); padding-right: 24px; }
+  .links a { padding: 6px 10px; font-size: .85rem; }
+  .tcard-img { aspect-ratio: 16 / 8; }
+}
+
+/* budget */
+.panel.grad-brand { background: var(--g-brand); color: #fff; display: grid; gap: 10px; align-content: start; }
+.panel.grad-brand .eyebrow { color: rgba(255, 255, 255, .85); }
+.budget .big { font-family: var(--font-display); font-size: clamp(2.2rem, 6vw, 3.2rem); font-weight: 700; margin: 0; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.budget .sub { margin: 0; opacity: .92; }
+.sbar { display: flex; height: 14px; border-radius: 999px; overflow: hidden; background: rgba(255, 255, 255, .2); }
+.sbar i { display: block; height: 100%; }
+.sbar .paid, .bkey.paid span { background: #a7f3d0; } .sbar .booked, .bkey.booked span { background: #fde68a; } .sbar .est, .bkey.est span { background: rgba(255, 255, 255, .55); }
+.bkeys { display: grid; gap: 8px; }
+.bkey { display: grid; grid-template-columns: 14px 1fr; gap: 10px; align-items: center; }
+.bkey span { width: 14px; height: 14px; border-radius: 4px; }
+.bkey b { font-variant-numeric: tabular-nums; }
+.bkey small { display: block; opacity: .85; font-size: .8rem; }
+.fine.light { color: rgba(255, 255, 255, .8); }
+.btable { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.btable th { text-align: left; font-size: .78rem; color: var(--muted); font-weight: 600; padding: 0 6px 8px; border-bottom: 2px solid var(--line); }
+.btable td { padding: 10px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.btable td small { display: block; color: var(--muted); font-size: .8rem; }
+.btable td small.n { font-size: .75rem; opacity: .85; }
+.btable .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.btable tfoot td { font-weight: 700; border-bottom: 0; padding-top: 12px; }
+.btable tfoot tr + tr td { font-weight: 600; color: var(--muted); padding-top: 2px; }
+.st { display: inline-block; font-size: .72rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.st.paid { background: #d1fae5; color: #065f46; } .st.booked { background: #fef3c7; color: #92400e; } .st.est { background: #eef0f6; color: #475569; }
+table.cost td:nth-child(3) { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--muted); }
+@media (max-width: 640px) { .btable th:nth-child(4), .btable td:nth-child(4) { display: none; } }
+
+/* discuss page */
+.mini-hero { background: var(--g-brand); color: #fff; padding-block: 48px 40px; }
+.mini-hero .eyebrow { color: rgba(255, 255, 255, .85); }
+.mini-hero h1 { font-size: clamp(2rem, 6vw, 3.4rem); }
+.mini-hero .grad { background: linear-gradient(120deg, #fde68a, #fbcfe8, #a5f3fc); -webkit-background-clip: text; background-clip: text; }
+.mini-hero p { margin: 8px 0 0; opacity: .92; }
+.lede { color: var(--muted); margin: 8px 0 0; max-width: 70ch; }
+.plans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+.plan { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; display: grid; gap: 12px; align-content: start;
+  border: 2px solid transparent; cursor: pointer; transition: transform .15s, border-color .15s; position: relative; overflow: hidden; }
+.plan::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; }
+.plan.tk::before, .plan.tk .pbar i, .plan.tk .pid { background: var(--g-tk); }
+.plan.sh::before, .plan.sh .pbar i, .plan.sh .pid { background: var(--g-sh); }
+.plan.ks::before, .plan.ks .pbar i, .plan.ks .pid { background: var(--g-ks); }
+.plan:hover { transform: translateY(-3px); }
+.plan.on { border-color: #a5b4fc; }
+.plan header { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: center; }
+.pid { width: 44px; height: 44px; border-radius: 14px; color: #fff; display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: 1.3rem; }
+.plan h3 { font-size: 1.15rem; }
+.plan header p { margin: 2px 0 0; font-size: .85rem; color: var(--muted); }
+.rec { display: inline-block; font-size: .72rem; font-family: var(--font-body); background: linear-gradient(135deg, #f59e0b, #facc15); color: #422006; padding: 2px 8px; border-radius: 999px; vertical-align: middle; }
+.ptotal { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.ptotal b { font-family: var(--font-display); font-size: 2rem; font-variant-numeric: tabular-nums; }
+.ptotal span { color: var(--muted); font-size: .9rem; }
+.diff { font-size: .8rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.diff.up { background: #ffe4e6; color: #be123c; } .diff.down { background: #d1fae5; color: #065f46; }
+.pbar { height: 10px; border-radius: 999px; background: #eef0f6; overflow: hidden; }
+.pbar i { display: block; height: 100%; border-radius: inherit; }
+.pall { margin: 0; font-size: .9rem; color: var(--muted); }
+.pall b { color: var(--ink); }
+.pros, .cons { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: .9rem; }
+.pros li::before { content: "＋ "; color: var(--ok); font-weight: 700; }
+.cons li::before { content: "－ "; color: var(--now); font-weight: 700; }
+.plan .cost td:last-child { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.plan sup, .fine sup { color: var(--wait); }
+table.cmp { width: 100%; border-collapse: collapse; font-size: .9rem; min-width: 640px; }
+.cmp th, .cmp td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.cmp thead th { font-size: .8rem; color: var(--muted); }
+.cmp tbody th { font-weight: 600; white-space: nowrap; }
+.cmp .on { background: #eef0ff; }
+.note-v { background: #fff7ed; border-radius: 12px; padding: 10px 14px; margin: 14px 0 6px; font-size: .92rem; }
+.topics { list-style: none; margin: 0 0 12px; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.topic { display: grid; grid-template-columns: 36px 1fr; gap: 12px; align-items: start; }
+.topic p { margin: 0; }
+.qn { width: 32px; height: 32px; border-radius: 10px; background: var(--g-brand); color: #fff; display: grid; place-items: center; font-weight: 700; }
+@media (max-width: 900px) { .plans, .topics { grid-template-columns: minmax(0, 1fr); } }
+
+/* plan comparison: time + highlighted differences */
+.kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.kpis > div { background: #f7f7fc; border-radius: 14px; padding: 10px 12px; display: grid; gap: 2px; align-content: start; }
+.kpis span { font-size: .75rem; color: var(--muted); }
+.kpis b { font-family: var(--font-display); font-size: 1.25rem; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.kpis small { color: var(--muted); font-size: .8rem; }
+.kpis .dl { justify-self: start; }
+.dl { display: inline-block; font-size: .74rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; margin: 2px 4px 0 0; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.dl.up { background: #ffe4e6; color: #be123c; } .dl.down { background: #d1fae5; color: #065f46; }
+table.cmp { min-width: 820px; }
+.cmp tbody th, .cmp tfoot th { width: 150px; }
+.cmp tbody th b { display: block; font-size: .85rem; }
+.cmp tbody th span { display: block; font-weight: 400; color: var(--muted); font-size: .82rem; }
+.cmp td .how { font-size: .86rem; }
+.cmp td .cm { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; font-size: .82rem; color: var(--muted); }
+.cmp td .cm b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.cmp td.chg { background: linear-gradient(135deg, rgba(244, 63, 94, .07), rgba(245, 158, 11, .10)); box-shadow: inset 3px 0 0 #f59e0b; }
+.cmp td.dup { color: var(--muted); opacity: .6; }
+.cmp td.na { color: var(--muted); text-align: center; }
+.cmp tfoot td, .cmp tfoot th { border-top: 2px solid var(--line); border-bottom: 0; padding-top: 12px; font-size: .9rem; }
+.cmp td.on { outline: 2px solid #a5b4fc; outline-offset: -2px; }
+.legend2 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: .8rem; color: var(--muted); margin: 0 0 10px; }
+.sw { display: inline-block; width: 16px; height: 12px; border-radius: 4px; }
+.sw.chg { background: linear-gradient(135deg, rgba(244, 63, 94, .25), rgba(245, 158, 11, .35)); }
+.sw.dup { background: #eef0f6; }
+.links a.talk { background: #fff1f2; color: #be123c; font-weight: 600; }
+html, body { overflow-x: hidden; }
+.hero-sub { overflow-wrap: anywhere; }
+@media (max-width: 640px) { .fact b { font-size: 1.5rem; } .hero-actions .btn { padding: 10px 16px; font-size: .92rem; } }
+
+/* flights — boarding-pass cards */
+#flights { margin-top: 36px; }
+.fpasses { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.fpass { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.fpass header { color: #fff; padding: 12px 18px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.fpass.tk header { background: var(--g-tk); } .fpass.ks2 header { background: var(--g-ks2); }
+.fpass header b { font-family: var(--font-display); font-size: 1.2rem; margin-left: auto; }
+.fpass header small { width: 100%; opacity: .85; }
+.fp-route { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px; padding: 16px 18px 8px; }
+.fp-end { display: grid; } .fp-end:last-child { text-align: right; }
+.fp-end b { font-family: var(--font-display); font-size: 1.8rem; line-height: 1; }
+.fp-tm { font-family: var(--font-display); font-weight: 700; font-size: 1.3rem; }
+.fp-end small { color: var(--muted); }
+.fp-mid { display: grid; justify-items: center; gap: 4px; color: var(--muted); font-size: .8rem; min-width: 70px; }
+.fp-mid i { display: block; width: 100%; height: 2px; background: repeating-linear-gradient(90deg, var(--line) 0 6px, transparent 6px 10px); position: relative; }
+.fp-mid i::after { content: "✈"; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -55%); font-style: normal; color: var(--ink); font-size: 1rem; }
+.fp-bag { margin: 0; padding: 8px 18px 16px; font-size: .85rem; color: var(--muted); border-top: 1px dashed var(--line); }
+@media (max-width: 640px) { .fpasses { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<nav class="top"><div class="wrap">
+  <a class="brand" href="#">🇯🇵 ญี่ปุ่น ธ.ค. 69</a>
+  <div class="links"><a class="talk" href="discuss.html">💬 คุยกัน</a><a href="#flights">✈ เที่ยวบิน</a><a href="#tour">แผนที่ 3D</a><a href="#days">วันต่อวัน</a><a href="#booking">การจอง</a><a href="#budget">งบ</a><a href="#todo">ต้องทำ</a><a class="pres" href="present.html">▶ พรีเซนต์</a></div>
+</div></nav>
+
+<header class="hero">
+  <img class="hero-img" src="img/fuji.jpg" alt="" decoding="async">
+  <div class="hero-in wrap">
+    <p class="eyebrow">ทริปครอบครัว Sangsinsup · 4 คน</p>
+    <h1>ญี่ปุ่น <span class="grad">1–11 ธ.ค.</span> 2026</h1>
+    <p class="hero-sub">Tokyo · Mt. Fuji · Kyoto · Nara · Takayama · Shirakawa-go · Osaka</p>
+    <div class="hero-actions">
+      <a class="btn primary" href="#tour">🗺 ทัวร์แผนที่ 3D</a>
+      <a class="btn glass" href="discuss.html">💬 เรื่องที่ต้องคุย</a>
+      <a class="btn glass" href="present.html">▶ โหมดพรีเซนต์</a>
+    </div>
+  </div>
+  <div class="facts wrap">
+    <div class="fact"><b id="countdown">—</b><span>วันก่อนออกเดินทาง</span></div>
+    <div class="fact"><b>8</b><span>คืนในญี่ปุ่น</span></div>
+    <div class="fact"><b>฿58,267</b><span>งบต่อคน (ประมาณ)</span></div>
+    <div class="fact"><b>5/20</b><span>เตรียมตัวเสร็จ</span></div>
+  </div>
+</header>
+<main>
+
+<section class="wrap" id="flights">
+  <div class="sec-head"><p class="eyebrow">จองแล้ว ✓ · เวลาท้องถิ่นของแต่ละสนามบิน</p><h2>เที่ยวบิน</h2></div>
+  <div class="fpasses">
+    <article class="fpass tk">
+      <header><span>ขาไป</span><b>✈ XJ600</b><small>Thai AirAsia X</small></header>
+      <div class="fp-route"><div class="fp-end"><b>DMK</b><span class="fp-tm">23:50</span><small>อ. 1 ธ.ค. · Bangkok T1</small></div><div class="fp-mid"><i></i><small>6 ชม. 10 นาที</small></div><div class="fp-end"><b>NRT</b><span class="fp-tm">08:00</span><small>พ. 2 ธ.ค. · Tokyo T2</small></div></div>
+      <p class="fp-bag">🧳 โหลด 20 กก./คน · ถือขึ้น 7 กก.</p>
+    </article>
+    <article class="fpass ks2">
+      <header><span>ขากลับ (เปลี่ยนแล้ว)</span><b>✈ XJ611</b><small>Thai AirAsia X</small></header>
+      <div class="fp-route"><div class="fp-end"><b>KIX</b><span class="fp-tm">19:45</span><small>พฤ. 10 ธ.ค. · Osaka T1</small></div><div class="fp-mid"><i></i><small>6 ชม. 30 นาที</small></div><div class="fp-end"><b>DMK</b><span class="fp-tm">00:15</span><small>ศ. 11 ธ.ค. · Bangkok T1</small></div></div>
+      <p class="fp-bag">🧳 โหลด 20 กก./คน · 1 ชิ้น 56×36×23 cm + ของส่วนตัว 1 ชิ้น 40×30×10 cm</p>
+    </article>
+  </div>
+</section>
+
+<section class="wrap" id="tour">
+  <div class="sec-head"><p class="eyebrow">กดจุด หรือกดเล่นอัตโนมัติ</p><h2>ทัวร์แผนที่ 3D</h2></div>
+  <div class="tour">
+    <div class="map-frame"><div id="map3d" role="region" aria-label="แผนที่ 3D เส้นทางทริป"></div>
+      <div class="map-ctl">
+        <button type="button" id="t-prev" aria-label="จุดก่อนหน้า">◀</button>
+        <button type="button" id="t-play" class="play">▶ เล่นทัวร์</button>
+        <button type="button" id="t-next" aria-label="จุดถัดไป">▶</button>
+        <button type="button" id="t-all" aria-label="ดูทั้งเส้นทาง">🗾</button>
+      </div>
+    </div>
+    <div class="tcards">
+      <article class="tcard tk" data-i="0">
+        <img class="tcard-img" src="img/ueno.jpg" alt="" loading="lazy" decoding="async">
+        <div class="tcard-body">
+          <p class="eyebrow">Day 2 · พ. 2 ธ.ค.</p>
+          <h3>Ueno · Ameyoko</h3>
+          <p>ที่พัก 2 คืน · ช้อปเสื้อหนาวคืนแรก · Skyliner ตรงจากนาริตะ 41 นาที</p>
+          <ul class="hl"><li><span class="ic">🚆</span><span class="tm">08:00</span><span>ถึง NRT T2 · ตม. + รับกระเป๋า</span></li><li><span class="ic">🍜</span><span class="tm">11:30</span><span>มื้อเที่ยงย่าน Ueno → เดินเล่น Ueno Park</span></li><li><span class="ic">📍</span><span class="tm">17:00</span><span>Ameyoko Market + ซื้อของกันหนาวย่าน Okachimachi</span></li></ul>
+          <a class="link" href="#day2" data-day="2">ดูตารางวันนี้ →</a>
+        </div>
+      </article>
+      <article class="tcard tk" data-i="1" hidden>
+        <img class="tcard-img" src="img/chureito.jpg" alt="" loading="lazy" decoding="async">
+        <div class="tcard-body">
+          <p class="eyebrow">Day 3 · พฤ. 3 ธ.ค.</p>
+          <h3>Mt. Fuji · Chureito</h3>
+          <p>ขับรถเองจาก Ueno · เจดีย์ Chureito · Oishi Park · Oshino Hakkai</p>
+          <ul class="hl"><li><span class="ic">📍</span><span class="tm">10:20</span><span>Chureito Pagoda (เจดีย์แดง)</span></li><li><span class="ic">📍</span><span class="tm">12:00</span><span>Oishi Park (สวนโออิชิ) ริมทะเลสาบ Kawaguchiko</span></li><li><span class="ic">🍜</span><span class="tm">13:00</span><span>มื้อเที่ยง Hoto Fudou สาขา Higashikoiji</span></li></ul>
+          <a class="link" href="#day3" data-day="3">ดูตารางวันนี้ →</a>
+        </div>
+      </article>
+      <article class="tcard tk" data-i="2" hidden>
+        <img class="tcard-img" src="img/tsukiji.jpg" alt="" loading="lazy" decoding="async">
+        <div class="tcard-body">
+          <p class="eyebrow">Day 4 · ศ. 4 ธ.ค.</p>
+          <h3>Tsukiji Outer Market</h3>
+          <p>มื้อเช้าซีฟู้ด แล้วนั่งชินคันเซ็นไปโอซาก้า</p>
+          <ul class="hl"><li><span class="ic">🚆</span><span class="tm">07:30</span><span>เช็คเอาท์ MONday · ฝากกระเป๋าทั้งหมดที่ล็อบบี้</span></li><li><span class="ic">🍜</span><span class="tm">08:00</span><span>Hibiya Line: Ueno → Tsukiji · ตลาดปลา Tsukiji Outer Market</span></li><li><span class="ic">📍</span><span class="tm">16:00</span><span>Umeda: Pokémon Center Osaka (Daimaru Umeda ชั้น 13) + ช็อป On ที่ Hankyu Umeda</span></li></ul>
+          <a class="link" href="#day4" data-day="4">ดูตารางวันนี้ →</a>
+        </div>
+      </article>
+      <article class="tcard ks" data-i="3" hidden>
+        <img class="tcard-img" src="img/inari.jpg" alt="" loading="lazy" decoding="async">
+        <div class="tcard-body">
+          <p class="eyebrow">Day 5 · ส. 5 ธ.ค.</p>
+          <h3>Kyoto · Fushimi Inari</h3>
+          <p>เดย์ทริปเกียวโต · ประตูโทริอิสีแดงนับพัน</p>
+          <ul class="hl"><li><span class="ic">📍</span><span class="tm">09:00</span><span>Fushimi Inari Shrine (ศาลเจ้าฟุชิมิอินาริ)</span></li><li><span class="ic">🍜</span><span class="tm">12:00</span><span>มื้อเที่ยงเซ็ตอาหารญี่ปุ่นสไตล์เกียวโต</span></li><li><span class="ic">📍</span><span class="tm">13:30</span><span>Kiyomizu-dera (วัดน้ำใส) → Ninenzaka &amp; Sannenzaka</span></li></ul>
+          <a class="link" href="#day5" data-day="5">ดูตารางวันนี้ →</a>
+        </div>
+      </article>
+      <article class="tcard ks" data-i="4" hidden>
+        <img class="tcard-img" src="img/nara.jpg" alt="" loading="lazy" decoding="async">
+        <div class="tcard-body">
+          <p class="eyebrow">Day 6 · อา. 6 ธ.ค.</p>
+          <h3>Nara Park</h3>
+          <p>ให้อาหารกวาง · ไหว้พระใหญ่ Todai-ji</p>
+          <ul class="hl"><li><span class="ic">📍</span><span class="tm">09:15</span><span>Nara Park (สวนกวาง) + Todai-ji (วัดโทไดจิ)</span></li><li><span class="ic">🍜</span><span class="tm">12:00</span><span>นั่งรถไฟกลับ Osaka · มื้อเที่ยงจานด่วน</span></li><li><span class="ic">📍</span><span class="tm">14:30</span><span>วัด Katsuo-ji (วัดดารุมะแห่งชัยชนะ)</span></li></ul>
+          <a class="link" href="#day6" data-day="6">ดูตารางวันนี้ →</a>
+        </div>
+      </article>
+      <article class="tcard ks" data-i="5" hidden>
+        <img class="tcard-img" src="img/katsuoji.jpg" alt="" loading="lazy" decoding="async">
+        <div class="tcard-body">
+          <p class="eyebrow">Day 6 · อา. 6 ธ.ค.</p>
+          <h3>Katsuo-ji</h3>
+          <p>วัดดารุมะแห่งชัยชนะ · ตุ๊กตาแดงทั่วหุบเขา</p>
+          <ul class="hl"><li><span class="ic">📍</span><span class="tm">09:15</span><span>Nara Park (สวนกวาง) + Todai-ji (วัดโทไดจิ)</span></li><li><span class="ic">🍜</span><span class="tm">12:00</span><span>นั่งรถไฟกลับ Osaka · มื้อเที่ยงจานด่วน</span></li><li><span class="ic">📍</span><span class="tm">14:30</span><span>วัด Katsuo-ji (วัดดารุมะแห่งชัยชนะ)</span></li></ul>
+          <a class="link" href="#day6" data-day="6">ดูตารางวันนี้ →</a>
+        </div>
+      </article>
+      <article class="tcard sh" data-i="6" hidden>
+        <img class="tcard-img" src="img/takayama.jpg" alt="" loading="lazy" decoding="async">
+        <div class="tcard-body">
+          <p class="eyebrow">Day 7 · จ. 7 ธ.ค.</p>
+          <h3>Takayama</h3>
+          <p>JR Hida จาก Nagoya · พัก 1 คืนที่ Takayama Ouan · เนื้อฮิดะ</p>
+          <ul class="hl"><li><span class="ic">🍜</span><span class="tm">11:30</span><span>มื้อเที่ยงง่ายๆ รอบสถานี</span></li><li><span class="ic">📍</span><span class="tm">13:40</span><span>เดินชมหมู่บ้านมรดกโลก Shirakawa-go ~2.5–3 ชม.</span></li><li><span class="ic">🍜</span><span class="tm">19:00</span><span>มื้อค่ำปิ้งย่างเนื้อฮิดะพรีเมียม (Hida Beef)</span></li></ul>
+          <a class="link" href="#day7" data-day="7">ดูตารางวันนี้ →</a>
+        </div>
+      </article>
+      <article class="tcard sh" data-i="7" hidden>
+        <img class="tcard-img" src="img/shirakawago.jpg" alt="" loading="lazy" decoding="async">
+        <div class="tcard-body">
+          <p class="eyebrow">Day 7 · จ. 7 ธ.ค.</p>
+          <h3>Shirakawa-go</h3>
+          <p>หมู่บ้านหลังคาฟางในหิมะ · Nohi Bus 50 นาทีจาก Takayama</p>
+          <ul class="hl"><li><span class="ic">🍜</span><span class="tm">11:30</span><span>มื้อเที่ยงง่ายๆ รอบสถานี</span></li><li><span class="ic">📍</span><span class="tm">13:40</span><span>เดินชมหมู่บ้านมรดกโลก Shirakawa-go ~2.5–3 ชม.</span></li><li><span class="ic">🍜</span><span class="tm">19:00</span><span>มื้อค่ำปิ้งย่างเนื้อฮิดะพรีเมียม (Hida Beef)</span></li></ul>
+          <a class="link" href="#day7" data-day="7">ดูตารางวันนี้ →</a>
+        </div>
+      </article>
+      <article class="tcard sh" data-i="8" hidden>
+        <img class="tcard-img" src="img/shinhotaka.jpg" alt="" loading="lazy" decoding="async">
+        <div class="tcard-body">
+          <p class="eyebrow">Day 8 · อ. 8 ธ.ค.</p>
+          <h3>Shinhotaka Ropeway</h3>
+          <p>กระเช้า 2 ชั้นขึ้นสูง 2,156 ม. · วิวเทือกเขาแอลป์ญี่ปุ่น</p>
+          <ul class="hl"><li><span class="ic">🍜</span><span class="tm">06:45</span><span>อาหารเช้าแถวสถานี Takayama</span></li><li><span class="ic">📍</span><span class="tm">09:00</span><span>ขึ้นกระเช้าลอยฟ้า 2 ชั้น · ยอดเขาหิมะ 360 องศา</span></li><li><span class="ic">🍜</span><span class="tm">13:35</span><span>รับเป้ที่โรงแรม · หาอะไรกินเร็วๆ / ซื้อขึ้นรถไฟ</span></li></ul>
+          <a class="link" href="#day8" data-day="8">ดูตารางวันนี้ →</a>
+        </div>
+      </article>
+      <article class="tcard ks2" data-i="9" hidden>
+        <img class="tcard-img" src="img/dotonbori.jpg" alt="" loading="lazy" decoding="async">
+        <div class="tcard-body">
+          <p class="eyebrow">Day 9 · พ. 9 ธ.ค.</p>
+          <h3>Osaka · Dotonbori</h3>
+          <p>วันช้อปปิ้งใหญ่ · Shinsaibashi · Namba</p>
+          <ul class="hl"><li><span class="ic">📍</span><span class="tm">10:00</span><span>ย่านช้อปปิ้ง Shinsaibashi และ Dotonbori</span></li><li><span class="ic">📍</span><span class="tm">11:00</span><span>ล่ารองเท้า On (On Cloud)</span></li><li><span class="ic">📍</span><span class="tm">13:00</span><span>ช่วงบ่าย: เครื่องสำอาง สกินแคร์ ยาสามัญ</span></li></ul>
+          <a class="link" href="#day9" data-day="9">ดูตารางวันนี้ →</a>
+        </div>
+      </article>
+      <article class="tcard ks2" data-i="10" hidden>
+        <img class="tcard-img" src="img/kuromon.jpg" alt="" loading="lazy" decoding="async">
+        <div class="tcard-body">
+          <p class="eyebrow">Day 10 · พฤ. 10 ธ.ค.</p>
+          <h3>Kuromon → KIX</h3>
+          <p>ตลาดคุโรมงมื้อสุดท้าย · Nankai ไปสนามบิน · บิน 19:45</p>
+          <ul class="hl"><li><span class="ic">🍜</span><span class="tm">09:00</span><span>ตลาดคุโรมง (Kuromon Ichiba Market)</span></li><li><span class="ic">📍</span><span class="tm">12:00</span><span>เก็บตกช้อปปิ้งย่าน Namba · มื้อเที่ยงปิดท้ายทริป</span></li><li><span class="ic">📍</span><span class="tm">17:00</span><span>ช้อป Duty Free ด้านใน</span></li></ul>
+          <a class="link" href="#day10" data-day="10">ดูตารางวันนี้ →</a>
+        </div>
+      </article>
+    </div>
+  </div>
+  <div class="stops" role="tablist"><button class="stop tk" type="button" data-i="0" aria-label="Ueno · Ameyoko"><img class="" src="img/ueno.jpg" alt="" loading="lazy" decoding="async"><span>1</span></button><button class="stop tk" type="button" data-i="1" aria-label="Mt. Fuji · Chureito"><img class="" src="img/chureito.jpg" alt="" loading="lazy" decoding="async"><span>2</span></button><button class="stop tk" type="button" data-i="2" aria-label="Tsukiji Outer Market"><img class="" src="img/tsukiji.jpg" alt="" loading="lazy" decoding="async"><span>3</span></button><button class="stop ks" type="button" data-i="3" aria-label="Kyoto · Fushimi Inari"><img class="" src="img/inari.jpg" alt="" loading="lazy" decoding="async"><span>4</span></button><button class="stop ks" type="button" data-i="4" aria-label="Nara Park"><img class="" src="img/nara.jpg" alt="" loading="lazy" decoding="async"><span>5</span></button><button class="stop ks" type="button" data-i="5" aria-label="Katsuo-ji"><img class="" src="img/katsuoji.jpg" alt="" loading="lazy" decoding="async"><span>6</span></button><button class="stop sh" type="button" data-i="6" aria-label="Takayama"><img class="" src="img/takayama.jpg" alt="" loading="lazy" decoding="async"><span>7</span></button><button class="stop sh" type="button" data-i="7" aria-label="Shirakawa-go"><img class="" src="img/shirakawago.jpg" alt="" loading="lazy" decoding="async"><span>8</span></button><button class="stop sh" type="button" data-i="8" aria-label="Shinhotaka Ropeway"><img class="" src="img/shinhotaka.jpg" alt="" loading="lazy" decoding="async"><span>9</span></button><button class="stop ks2" type="button" data-i="9" aria-label="Osaka · Dotonbori"><img class="" src="img/dotonbori.jpg" alt="" loading="lazy" decoding="async"><span>10</span></button><button class="stop ks2" type="button" data-i="10" aria-label="Kuromon → KIX"><img class="" src="img/kuromon.jpg" alt="" loading="lazy" decoding="async"><span>11</span></button></div>
+</section>
+
+<section class="wrap" id="days">
+  <div class="sec-head"><p class="eyebrow">เลือกวัน</p><h2>วันต่อวัน</h2></div>
+  <div class="dchips" role="tablist"><button class="dchip tk" type="button" data-day="1"><b>1</b><span>อ.</span></button><button class="dchip tk" type="button" data-day="2"><b>2</b><span>พ.</span></button><button class="dchip tk" type="button" data-day="3"><b>3</b><span>พฤ.</span></button><button class="dchip tk" type="button" data-day="4"><b>4</b><span>ศ.</span></button><button class="dchip ks" type="button" data-day="5"><b>5</b><span>ส.</span></button><button class="dchip ks" type="button" data-day="6"><b>6</b><span>อา.</span></button><button class="dchip sh" type="button" data-day="7"><b>7</b><span>จ.</span></button><button class="dchip sh" type="button" data-day="8"><b>8</b><span>อ.</span></button><button class="dchip ks2" type="button" data-day="9"><b>9</b><span>พ.</span></button><button class="dchip ks2" type="button" data-day="10"><b>10</b><span>พฤ.</span></button><button class="dchip ks2" type="button" data-day="11"><b>11</b><span>ศ.</span></button></div>
+  <div class="legend"><span class="tk"><i></i>Tokyo</span><span class="ks"><i></i>Kansai</span><span class="sh"><i></i>Takayama · Shirakawago · Shinhotaka</span><span class="ks2"><i></i>Osaka ช้อปปิ้ง &amp; กลับบ้าน</span></div>
+  <div class="dcards">
+    <article class="day tk" id="day1" data-day="1">
+      <div class="day-media"><div class="day-img blank">✈</div><span class="day-n">Day 1</span></div>
+      <div class="day-body">
+        <p class="eyebrow">อ. 1 ธ.ค. · Bangkok DMK T1</p>
+        <h3>ออกเดินทางจากกรุงเทพ</h3>
+        <ul class="hl"><li><span class="ic">🚆</span><span class="tm">20:50</span><span>ถึง DMK T1 · เช็คอินสัมภาระ</span></li><li><span class="ic">🚆</span><span class="tm">23:50</span><span>XJ600 ออกเดินทาง → Tokyo Narita</span></li></ul>
+        <p class="stay">🛏 บนเครื่อง</p>
+        <details class="more"><summary>ตารางเต็มวัน</summary><ol class="full"><li><span class="tm">20:50</span><div><div>ถึง DMK T1 · เช็คอินสัมภาระ</div><div class="bnote">เผื่อ 3 ชม. ก่อนบิน · โหลด 20 กก./คน</div></div></li><li><span class="tm">23:50</span><div><div>XJ600 ออกเดินทาง → Tokyo Narita</div></div></li></ol></details>
+      </div>
+    </article>
+    <article class="day tk" id="day2" data-day="2">
+      <div class="day-media"><img class="day-img" src="img/ueno.jpg" alt="" loading="lazy" decoding="async"><span class="day-n">Day 2</span></div>
+      <div class="day-body">
+        <p class="eyebrow">พ. 2 ธ.ค. · NRT T2 → Ueno</p>
+        <h3>แลนดิ้งนาริตะ → โตเกียว &amp; ย่านอุเอโนะ</h3>
+        <ul class="hl"><li><span class="ic">🚆</span><span class="tm">08:00</span><span>ถึง NRT T2 · ตม. + รับกระเป๋า</span></li><li><span class="ic">🍜</span><span class="tm">11:30</span><span>มื้อเที่ยงย่าน Ueno → เดินเล่น Ueno Park</span></li><li><span class="ic">📍</span><span class="tm">17:00</span><span>Ameyoko Market + ซื้อของกันหนาวย่าน Okachimachi</span></li></ul>
+        <p class="stay">🛏 MONday Apart Premium Ueno</p>
+        <details class="more"><summary>ตารางเต็มวัน</summary><ol class="full"><li><span class="tm">08:00</span><div><div>ถึง NRT T2 · ตม. + รับกระเป๋า</div><div class="bnote">ทำ/เติม Suica · แลกเงินสด</div></div></li><li><span class="tm">09:30</span><div><div>Keisei Skyliner → Keisei-Ueno</div><div class="bnote">41 นาที · ¥2,580/คน · เร็วและสะดวกสุดสำหรับคนพัก Ueno</div></div></li><li><span class="tm">10:30</span><div><div>เดินไป MONday Apart Premium Ueno · ฝากกระเป๋า</div><div class="bnote">ยังเช็คอินไม่ได้ (เช็คอิน 15:00)</div></div></li><li><span class="tm">11:30</span><div><div>มื้อเที่ยงย่าน Ueno → เดินเล่น Ueno Park</div><div class="bnote">เดินชิลๆ รับลมหนาว — บินข้ามคืนมา อย่าเพิ่งหักโหม</div></div></li><li><span class="tm">15:00</span><div><div>เช็คอิน · พักผ่อน</div></div></li><li><span class="tm">17:00</span><div><div>Ameyoko Market + ซื้อของกันหนาวย่าน Okachimachi</div><div class="bnote">สตรีทฟู้ด · UNIQLO/GU (Heattech Ultra Warm) · Art Sports ODBOX (ดู On Cloud + ice grips) · Mont-bell · ไคโระที่ Matsumoto Kiyoshi — ดูพิกัดด้านล่าง</div></div></li></ol></details>
+      </div>
+    </article>
+    <article class="day tk" id="day3" data-day="3">
+      <div class="day-media"><img class="day-img" src="img/chureito.jpg" alt="" loading="lazy" decoding="async"><span class="day-n">Day 3</span></div>
+      <div class="day-body">
+        <p class="eyebrow">พฤ. 3 ธ.ค. · Ueno → Kawaguchiko → Ueno · ~120 กม. ต่อทาง</p>
+        <h3>ขับรถเที่ยวเอง · ภูเขาไฟฟูจิ &amp; คาวากุจิโกะ</h3>
+        <ul class="hl"><li><span class="ic">📍</span><span class="tm">10:20</span><span>Chureito Pagoda (เจดีย์แดง)</span></li><li><span class="ic">📍</span><span class="tm">12:00</span><span>Oishi Park (สวนโออิชิ) ริมทะเลสาบ Kawaguchiko</span></li><li><span class="ic">🍜</span><span class="tm">13:00</span><span>มื้อเที่ยง Hoto Fudou สาขา Higashikoiji</span></li></ul>
+        <p class="stay">🛏 MONday Apart Premium Ueno</p>
+        <details class="more"><summary>ตารางเต็มวัน</summary><ol class="full"><li><span class="tm">08:00</span><div><div>รับรถที่ Toyota Rent a Car สาขา Ueno</div><div class="bnote warn">⚠️ ร้านเปิด 08:00 (แผนแม่ 07:30) · พกใบขับขี่สากล (เจนีวา 1949) + ใบขับขี่ไทย + พาสปอร์ต · ขอ ETC card</div></div></li><li><span class="tm">08:20</span><div><div>ขึ้นทางด่วน Shuto → Chuo Expressway มุ่งหน้าฟูจิ</div><div class="bnote">~2 ชม. · ผ่านด่านด้วย ETC</div></div></li><li><span class="tm">10:20</span><div><div>Chureito Pagoda (เจดีย์แดง)</div><div class="bnote">จอดลานด้านล่างแล้วเดินบันได ~398 ขั้น — พ่อแม่เดินช้าๆ พักเป็นช่วงได้ · ฟูจิชัดสุดช่วงเช้า</div></div></li><li><span class="tm">12:00</span><div><div>Oishi Park (สวนโออิชิ) ริมทะเลสาบ Kawaguchiko</div><div class="bnote">จอดฟรี · วิวฟูจิแนวระนาบ</div></div></li><li><span class="tm">13:00</span><div><div>มื้อเที่ยง Hoto Fudou สาขา Higashikoiji</div><div class="bnote">อุด้งหม้อไฟ Hoto ร้อนๆ · ร้านโดมสีขาวทรงก้อนเมฆ · ที่จอดกว้าง</div></div></li><li><span class="tm">14:30</span><div><div>Oshino Hakkai (หมู่บ้านน้ำใส)</div><div class="bnote">บ่อน้ำศักดิ์สิทธิ์ · ที่จอดเอกชนรอบหมู่บ้าน ~¥300</div></div></li><li><span class="tm">16:30</span><div><div>ขับกลับ Tokyo · เติมน้ำมันเต็มถังใกล้จุดคืนรถ</div><div class="bnote warn">พระอาทิตย์ตก ~16:30 · ถึง Ueno ~19:00 · ⚠️ ต้องคืนรถก่อนร้านปิด 20:00</div></div></li></ol></details>
+      </div>
+    </article>
+    <article class="day tk" id="day4" data-day="4">
+      <div class="day-media"><img class="day-img" src="img/tsukiji.jpg" alt="" loading="lazy" decoding="async"><span class="day-n">Day 4</span></div>
+      <div class="day-body">
+        <p class="eyebrow">ศ. 4 ธ.ค. · Tokyo → Shin-Osaka → Ebisucho → Umeda</p>
+        <h3>ตลาดปลาซึคิจิ → ชินคันเซ็น → โอซาก้า (Pokémon Center)</h3>
+        <ul class="hl"><li><span class="ic">🚆</span><span class="tm">07:30</span><span>เช็คเอาท์ MONday · ฝากกระเป๋าทั้งหมดที่ล็อบบี้</span></li><li><span class="ic">🍜</span><span class="tm">08:00</span><span>Hibiya Line: Ueno → Tsukiji · ตลาดปลา Tsukiji Outer Market</span></li><li><span class="ic">📍</span><span class="tm">16:00</span><span>Umeda: Pokémon Center Osaka (Daimaru Umeda ชั้น 13) + ช็อป On ที่ Hankyu Umeda</span></li></ul>
+        <p class="stay">🛏 ESLEAD Hotel Osaka Ebisu</p>
+        <details class="more"><summary>ตารางเต็มวัน</summary><ol class="full"><li><span class="tm">07:30</span><div><div>เช็คเอาท์ MONday · ฝากกระเป๋าทั้งหมดที่ล็อบบี้</div></div></li><li><span class="tm">08:00</span><div><div>Hibiya Line: Ueno → Tsukiji · ตลาดปลา Tsukiji Outer Market</div><div class="bnote">12 นาที · ไข่หวานย่าง · หอยเชลล์ย่างเนย · สตรอว์เบอร์รีไดฟุกุ</div></div></li><li><span class="tm">10:30</span><div><div>กลับโรงแรม Ueno รับกระเป๋า</div></div></li><li><span class="tm">11:15</span><div><div>ไปสถานี Tokyo · ซื้อข้าวกล่อง Ekiben</div><div class="bnote">JR Ueno-Tokyo Line / Yamanote ~8 นาที</div></div></li><li><span class="tm">12:00</span><div><div>Shinkansen Nozomi: Tokyo → Shin-Osaka</div><div class="bnote">~2h30m · ถึง ~14:30 · จอง 4 ที่นั่งติดกันล่วงหน้า · นั่งฝั่งขวา (ที่นั่ง E) เห็นฟูจิ</div></div></li><li><span class="tm">15:00</span><div><div>Midosuji Line → Dobutsuen-mae → ฝากกระเป๋าที่ ESLEAD Ebisu</div><div class="bnote">~25 นาทีจาก Shin-Osaka · เช็คอินจริงได้หลัง 16:00 (แผนแม่ 14:45 = ฝากกระเป๋าก่อน)</div></div></li><li><span class="tm">16:00</span><div><div>Umeda: Pokémon Center Osaka (Daimaru Umeda ชั้น 13) + ช็อป On ที่ Hankyu Umeda</div><div class="bnote">สองห้างเดินเชื่อมกันได้ · กลับมาเช็คอิน + มื้อค่ำแถวโรงแรม/Shinsekai</div></div></li></ol></details>
+      </div>
+    </article>
+    <article class="day ks" id="day5" data-day="5">
+      <div class="day-media"><img class="day-img" src="img/inari.jpg" alt="" loading="lazy" decoding="async"><span class="day-n">Day 5</span></div>
+      <div class="day-body">
+        <p class="eyebrow">ส. 5 ธ.ค. · Osaka → Kyoto → Osaka</p>
+        <h3>เดย์ทริปเกียวโต ⛩ เมืองเก่าและวัฒนธรรม</h3>
+        <ul class="hl"><li><span class="ic">📍</span><span class="tm">09:00</span><span>Fushimi Inari Shrine (ศาลเจ้าฟุชิมิอินาริ)</span></li><li><span class="ic">🍜</span><span class="tm">12:00</span><span>มื้อเที่ยงเซ็ตอาหารญี่ปุ่นสไตล์เกียวโต</span></li><li><span class="ic">📍</span><span class="tm">13:30</span><span>Kiyomizu-dera (วัดน้ำใส) → Ninenzaka &amp; Sannenzaka</span></li></ul>
+        <p class="stay">🛏 ESLEAD Hotel Osaka Ebisu</p>
+        <details class="more"><summary>ตารางเต็มวัน</summary><ol class="full"><li><span class="tm">08:00</span><div><div>นั่งรถไฟจาก Osaka → Kyoto (Fushimi Inari)</div><div class="bnote">แนะนำ: Sakaisuji Line จาก Ebisucho → Kitahama ต่อ Keihan → Fushimi-Inari (~55 นาที) — สาย Keihan ผ่านทุกจุดของวันนี้ (Fushimi Inari → Kiyomizu-Gojo → Gion-Shijo)</div></div></li><li><span class="tm">09:00</span><div><div>Fushimi Inari Shrine (ศาลเจ้าฟุชิมิอินาริ)</div><div class="bnote">อุโมงค์เสาโทริอิสีแดงนับพันต้น · เดินถึงจุดชมวิวกลางทางก็พอ ไม่ต้องขึ้นยอด</div></div></li><li><span class="tm">12:00</span><div><div>มื้อเที่ยงเซ็ตอาหารญี่ปุ่นสไตล์เกียวโต</div></div></li><li><span class="tm">13:30</span><div><div>Kiyomizu-dera (วัดน้ำใส) → Ninenzaka &amp; Sannenzaka</div><div class="bnote">ศาลาไม้หลังใหญ่ · เดินลงถนนโบราณ ซื้อชาเขียวมัทฉะ · วันเสาร์ + ปลายฤดูใบไม้แดง คนจะเยอะ · ทางขึ้นวัดเป็นเนิน</div></div></li><li><span class="tm">17:00</span><div><div>เดินเล่นย่านเมืองเก่า Gion</div></div></li><li><span class="tm">18:30</span><div><div>นั่งรถไฟกลับ Osaka · มื้อค่ำ + พักผ่อน</div><div class="bnote">Keihan จาก Gion-Shijo → Kitahama → Sakaisuji → Ebisucho</div></div></li></ol></details>
+      </div>
+    </article>
+    <article class="day ks" id="day6" data-day="6">
+      <div class="day-media"><img class="day-img" src="img/nara.jpg" alt="" loading="lazy" decoding="async"><span class="day-n">Day 6</span></div>
+      <div class="day-body">
+        <p class="eyebrow">อา. 6 ธ.ค. · Osaka → Nara → Osaka → Minoh (Katsuo-ji) → Shinsekai</p>
+        <h3>ทักทายกวางนารา 🦌 → ขอพรดารุมะที่วัด Katsuo-ji</h3>
+        <ul class="hl"><li><span class="ic">📍</span><span class="tm">09:15</span><span>Nara Park (สวนกวาง) + Todai-ji (วัดโทไดจิ)</span></li><li><span class="ic">🍜</span><span class="tm">12:00</span><span>นั่งรถไฟกลับ Osaka · มื้อเที่ยงจานด่วน</span></li><li><span class="ic">📍</span><span class="tm">14:30</span><span>วัด Katsuo-ji (วัดดารุมะแห่งชัยชนะ)</span></li></ul>
+        <p class="stay">🛏 ESLEAD Hotel Osaka Ebisu</p>
+        <details class="more"><summary>ตารางเต็มวัน</summary><ol class="full"><li><span class="tm">08:30</span><div><div>Kintetsu Nara Line → Kintetsu-Nara</div><div class="bnote">~40 นาที · จากโรงแรมขึ้น Sakaisuji 1 สถานีไป Nippombashi แล้วต่อ Kintetsu</div></div></li><li><span class="tm">09:15</span><div><div>Nara Park (สวนกวาง) + Todai-ji (วัดโทไดจิ)</div><div class="bnote">ซื้อขนมเซมเบ้ให้กวาง · ไหว้พระใหญ่</div></div></li><li><span class="tm">12:00</span><div><div>นั่งรถไฟกลับ Osaka · มื้อเที่ยงจานด่วน</div></div></li><li><span class="tm">13:30</span><div><div>Midosuji Line → Minoh-Kayano (สุดสาย) → Hankyu Bus สาย 29 → Katsuo-ji</div><div class="bnote warn">รวม ~1 ชม. · ⚠️ ถึงวัดแล้วดูเวลารถบัสเที่ยวกลับทันที (รอบไม่ถี่)</div></div></li><li><span class="tm">14:30</span><div><div>วัด Katsuo-ji (วัดดารุมะแห่งชัยชนะ)</div><div class="bnote">ตุ๊กตาดารุมะสีแดงนับหมื่นตัวทั่วหุบเขา · ค่าเข้า ~¥500 · วัดปิด ~17:00</div></div></li><li><span class="tm">17:30</span><div><div>กลับถึงย่าน Shinsekai ข้างโรงแรม · Kushikatsu (ของทอดเสียบไม้)</div></div></li><li><span class="tm">20:00</span><div><div>แพ็คกระเป๋าเป้ 1 คืนสำหรับ Takayama</div><div class="bnote">เสื้อกันหนาวชุดหนาสุด + แว่นกันแดด + ไคโระ · กระเป๋าใหญ่ทิ้งไว้ในห้อง Ebisu</div></div></li></ol></details>
+      </div>
+    </article>
+    <article class="day sh" id="day7" data-day="7">
+      <div class="day-media"><img class="day-img" src="img/shirakawago.jpg" alt="" loading="lazy" decoding="async"><span class="day-n">Day 7</span></div>
+      <div class="day-body">
+        <p class="eyebrow">จ. 7 ธ.ค. · Shin-Osaka → Nagoya → Takayama → Shirakawago → Takayama</p>
+        <h3>โอซาก้า → ทาคายาม่า → ชิราคาวาโกะ ❄ → เนื้อฮิดะ</h3>
+        <ul class="hl"><li><span class="ic">🍜</span><span class="tm">11:30</span><span>มื้อเที่ยงง่ายๆ รอบสถานี</span></li><li><span class="ic">📍</span><span class="tm">13:40</span><span>เดินชมหมู่บ้านมรดกโลก Shirakawa-go ~2.5–3 ชม.</span></li><li><span class="ic">🍜</span><span class="tm">19:00</span><span>มื้อค่ำปิ้งย่างเนื้อฮิดะพรีเมียม (Hida Beef)</span></li></ul>
+        <p class="stay">🛏 Takayama Ouan Hotel</p>
+        <details class="more"><summary>ตารางเต็มวัน</summary><ol class="full"><li><span class="tm">06:45</span><div><div>ออกจากโรงแรม Ebisu → Shin-Osaka</div><div class="bnote">Midosuji Line จาก Dobutsuen-mae ~22 นาที · ไปด้วยเป้ 1 คืน</div></div></li><li><span class="tm">07:30</span><div><div>Shinkansen Nozomi: Shin-Osaka → Nagoya</div><div class="bnote">~50 นาที · ต้องถึง Nagoya ก่อน 08:25 (แผนแม่ 07:33 → 08:43 จะต่อรถไม่ทันพอดี — เลือกขบวนที่ถึงเร็วกว่านั้น)</div></div></li><li><span class="tm">08:43</span><div><div>JR Limited Express Hida 3: Nagoya → Takayama</div><div class="bnote">ชมวิวหุบเขาและหิมะ · ถึง Takayama 10:58 (แผนแม่เขียน 11:34)</div></div></li><li><span class="tm">11:05</span><div><div>ถึง Takayama · ฝากเป้ที่ Takayama Ouan Hotel</div><div class="bnote">เดิน ~5 นาที · ยังเช็คอินไม่ได้ (15:00)</div></div></li><li><span class="tm">11:30</span><div><div>มื้อเที่ยงง่ายๆ รอบสถานี</div></div></li><li><span class="tm">12:50</span><div><div>Nohi Bus: Takayama → Shirakawago</div><div class="bnote">ถึง 13:40 · จองล่วงหน้า · ทางเลือก: รอบ 11:50 (ถึง 12:57) ได้เวลาเดินเพิ่ม ~45 นาที ก่อนมืด</div></div></li><li><span class="tm">13:40</span><div><div>เดินชมหมู่บ้านมรดกโลก Shirakawa-go ~2.5–3 ชม.</div><div class="bnote">จุดชมวิว Shiroyama · บ้าน Wada · สะพานแขวน Deai · พระอาทิตย์ตก ~16:40 · ต้นธ.ค. หิมะอาจยังบางหรือยังไม่ลง (ขึ้นกับปี)</div></div></li><li><span class="tm">16:15</span><div><div>Nohi Bus กลับ Takayama</div><div class="bnote warn">ถึง 17:20 · หรือรอบ 16:35 (ถึง 17:25) · ⚠️ ไม่มีรอบ 16:55 ตามแผนแม่</div></div></li><li><span class="tm">17:30</span><div><div>เช็คอิน Takayama Ouan · แช่ออนเซ็นดาดฟ้ารอบแรก ♨</div></div></li><li><span class="tm">19:00</span><div><div>มื้อค่ำปิ้งย่างเนื้อฮิดะพรีเมียม (Hida Beef)</div><div class="bnote">Ajikura Tengoku (เดิน 1 นาทีจากสถานี คิวแน่น) หรือ Hidagyu Maruaki สาขาหลัก (เดิน ~5 นาที) · ร้านในเมืองปิดเร็ว ควรไปถึงก่อน 19:00</div></div></li></ol></details>
+      </div>
+    </article>
+    <article class="day sh" id="day8" data-day="8">
+      <div class="day-media"><img class="day-img" src="img/shinhotaka.jpg" alt="" loading="lazy" decoding="async"><span class="day-n">Day 8</span></div>
+      <div class="day-body">
+        <p class="eyebrow">อ. 8 ธ.ค. · Takayama → Shinhotaka Ropeway → Takayama → Nagoya → Osaka</p>
+        <h3>กระเช้า Shinhotaka 🚠 → กลับโอซาก้า</h3>
+        <ul class="hl"><li><span class="ic">🍜</span><span class="tm">06:45</span><span>อาหารเช้าแถวสถานี Takayama</span></li><li><span class="ic">📍</span><span class="tm">09:00</span><span>ขึ้นกระเช้าลอยฟ้า 2 ชั้น · ยอดเขาหิมะ 360 องศา</span></li><li><span class="ic">🍜</span><span class="tm">13:35</span><span>รับเป้ที่โรงแรม · หาอะไรกินเร็วๆ / ซื้อขึ้นรถไฟ</span></li></ul>
+        <p class="stay">🛏 ESLEAD Hotel Osaka Ebisu</p>
+        <details class="more"><summary>ตารางเต็มวัน</summary><ol class="full"><li><span class="tm">06:45</span><div><div>อาหารเช้าแถวสถานี Takayama</div><div class="bnote warn">⚠️ ห้องที่จองเป็น Room Only (ไม่รวมบุฟเฟต์เช้า Hida Beef Don ตามแผนแม่) → Daily Yamazaki หน้าสถานี (24 ชม. ขนมปังอบร้อน) · ข้าวปั้น Onigiri-ya ในสถานี (เปิด 07:00) · คาเฟ่ EVINO (เปิด 07:00) · ถ้าอยากกินบุฟเฟต์โรงแรม ลองถามซื้อเพิ่มตอนเช็คอิน (ราคายังไม่รู้)</div></div></li><li><span class="tm">07:40</span><div><div>เช็คเอาท์ ฝากเป้ไว้ที่โรงแรม · Nohi Bus สาย Okuhida → Shinhotaka Ropeway</div><div class="bnote warn">ถึง ~08:45 · ไม่ต้องจอง ซื้อตั๋วที่ Bus Center · ⚠️ เช็คตารางฤดูหนาวว่ารอบ 07:40 ยังวิ่ง</div></div></li><li><span class="tm">09:00</span><div><div>ขึ้นกระเช้าลอยฟ้า 2 ชั้น · ยอดเขาหิมะ 360 องศา</div><div class="bnote">กระเช้าเที่ยวแรก 09:00 · บนยอด −5 ถึง −10°C ลมแรง แต่งตัวเต็มชุด + แว่นกันแดด · ถ้าลมแรงกระเช้าอาจหยุด → แผนสำรอง: เมืองเก่า Takayama</div></div></li><li><span class="tm">11:55</span><div><div>Nohi Bus กลับลงมา Takayama</div><div class="bnote">ถึง ~13:31 (แผนแม่ 12:00 → 13:45) · ถ้าพลาด รอบถัดไป 12:55 ถึง ~14:31 จะกระชั้นกับรถไฟ</div></div></li><li><span class="tm">13:35</span><div><div>รับเป้ที่โรงแรม · หาอะไรกินเร็วๆ / ซื้อขึ้นรถไฟ</div></div></li><li><span class="tm">14:46</span><div><div>JR Limited Express Hida 14: Takayama → Nagoya</div><div class="bnote">ถึง Nagoya 17:04 (แผนแม่เขียน 14:38) · สำรอง: Hida 16 ออก 15:34</div></div></li><li><span class="tm">17:20</span><div><div>Shinkansen Nozomi: Nagoya → Shin-Osaka</div><div class="bnote">~50 นาที · ถึง ~18:10</div></div></li><li><span class="tm">18:45</span><div><div>กลับถึง ESLEAD Hotel Ebisu · มื้อค่ำแถวโรงแรม</div></div></li></ol></details>
+      </div>
+    </article>
+    <article class="day ks2" id="day9" data-day="9">
+      <div class="day-media"><img class="day-img" src="img/dotonbori.jpg" alt="" loading="lazy" decoding="async"><span class="day-n">Day 9</span></div>
+      <div class="day-body">
+        <p class="eyebrow">พ. 9 ธ.ค. · Shinsaibashi · Dotonbori · Namba</p>
+        <h3>วันช้อปปิ้งใหญ่ในโอซาก้า 🛍 &amp; กวาดรองเท้า On Cloud</h3>
+        <ul class="hl"><li><span class="ic">📍</span><span class="tm">10:00</span><span>ย่านช้อปปิ้ง Shinsaibashi และ Dotonbori</span></li><li><span class="ic">📍</span><span class="tm">11:00</span><span>ล่ารองเท้า On (On Cloud)</span></li><li><span class="ic">📍</span><span class="tm">13:00</span><span>ช่วงบ่าย: เครื่องสำอาง สกินแคร์ ยาสามัญ</span></li></ul>
+        <p class="stay">🛏 ESLEAD Hotel Osaka Ebisu</p>
+        <details class="more"><summary>ตารางเต็มวัน</summary><ol class="full"><li><span class="tm">10:00</span><div><div>ย่านช้อปปิ้ง Shinsaibashi และ Dotonbori</div></div></li><li><span class="tm">11:00</span><div><div>ล่ารองเท้า On (On Cloud)</div><div class="bnote">HOMEGAME PLUS OSAKA หรือ Atmos Shinsaibashi · ทำ Tax-free ได้ทันที (พกพาสปอร์ตตัวจริง)</div></div></li><li><span class="tm">13:00</span><div><div>ช่วงบ่าย: เครื่องสำอาง สกินแคร์ ยาสามัญ</div><div class="bnote">Don Quijote + ร้านขายยาตลอดสองข้างถนนคนเดิน</div></div></li><li><span class="tm">18:00</span><div><div>ถ่ายรูปป้ายไฟ Glico ริมคลอง Dotonbori · มื้อค่ำ</div><div class="bnote">ปูยักษ์ หรือ ทาโกะยากิต้นตำรับ</div></div></li></ol></details>
+      </div>
+    </article>
+    <article class="day ks2" id="day10" data-day="10">
+      <div class="day-media"><img class="day-img" src="img/kuromon.jpg" alt="" loading="lazy" decoding="async"><span class="day-n">Day 10</span></div>
+      <div class="day-body">
+        <p class="eyebrow">พฤ. 10 ธ.ค. · Osaka → KIX T1</p>
+        <h3>ตลาดคุโรมง → สนามบินคันไซ → บินกลับไทย ✈ 19:45</h3>
+        <ul class="hl"><li><span class="ic">🍜</span><span class="tm">09:00</span><span>ตลาดคุโรมง (Kuromon Ichiba Market)</span></li><li><span class="ic">📍</span><span class="tm">12:00</span><span>เก็บตกช้อปปิ้งย่าน Namba · มื้อเที่ยงปิดท้ายทริป</span></li><li><span class="ic">📍</span><span class="tm">17:00</span><span>ช้อป Duty Free ด้านใน</span></li></ul>
+        <p class="stay">🛏 บนเครื่อง</p>
+        <details class="more"><summary>ตารางเต็มวัน</summary><ol class="full"><li><span class="tm">08:30</span><div><div>เช็คเอาท์ · ฝากกระเป๋าทั้งหมดที่ล็อบบี้โรงแรม</div><div class="bnote">เช็คเอาท์ต้องก่อน 10:00</div></div></li><li><span class="tm">09:00</span><div><div>ตลาดคุโรมง (Kuromon Ichiba Market)</div><div class="bnote">เดินหรือนั่ง Sakaisuji 1 สถานีไป Nippombashi · สตรอว์เบอร์รีลูกโต · ขนมของแห้ง ชาเขียว · อาหารเช้าข้าวหน้าปลาดิบ/หอยเชลล์ปิ้ง</div></div></li><li><span class="tm">12:00</span><div><div>เก็บตกช้อปปิ้งย่าน Namba · มื้อเที่ยงปิดท้ายทริป</div></div></li><li><span class="tm">14:30</span><div><div>กลับมารับกระเป๋าที่ ESLEAD Hotel Ebisu</div></div></li><li><span class="tm">15:00</span><div><div>Nankai Airport Express จาก Shin-Imamiya → KIX</div><div class="bnote">~40 นาที · ~¥970/คน · (แผนแม่: HARUKA — HARUKA ไม่จอด Shin-Imamiya ต้องไปขึ้นที่ Tennoji และแพงกว่า)</div></div></li><li><span class="tm">15:45</span><div><div>ถึง KIX T1 · เช็คอิน โหลดสัมภาระ ผ่าน ตม.</div><div class="bnote">ถึงก่อนเครื่องออก 4 ชม. — เหลือเฟือ (ขั้นต่ำควรถึง 16:45)</div></div></li><li><span class="tm">17:00</span><div><div>ช้อป Duty Free ด้านใน</div><div class="bnote">Royce · Tokyo Banana · Shiroi Koibito</div></div></li><li><span class="tm">19:45</span><div><div>XJ611 ออกเดินทาง → Bangkok (DMK)</div><div class="bnote warn">⚠️ ตั๋วจริง 19:45 (แผนแม่เขียน 19:00) · บิน 6 ชม. 30 นาที</div></div></li></ol></details>
+      </div>
+    </article>
+    <article class="day ks2" id="day11" data-day="11">
+      <div class="day-media"><div class="day-img blank">✈</div><span class="day-n">Day 11</span></div>
+      <div class="day-body">
+        <p class="eyebrow">ศ. 11 ธ.ค. · Bangkok DMK T1</p>
+        <h3>ถึงกรุงเทพฯ</h3>
+        <ul class="hl"><li><span class="ic">🚆</span><span class="tm">00:15</span><span>ถึง DMK T1</span></li></ul>
+        <p class="stay">🛏 บ้าน</p>
+        <details class="more"><summary>ตารางเต็มวัน</summary><ol class="full"><li><span class="tm">00:15</span><div><div>ถึง DMK T1</div></div></li></ol></details>
+      </div>
+    </article>
+  </div>
+</section>
+
+<section class="wrap" id="booking">
+  <div class="sec-head"><p class="eyebrow">ตั๋ว · ที่พัก · รถ</p><h2>การจอง</h2></div>
+  <div class="bgrid">
+    <div class="panel done"><h3>จองแล้ว</h3><ul class="donelist"><li><span class="ok">✓</span><div><b>✈ ขาไป · XJ600</b><small>อ. 1 ธ.ค. 23:50 DMK T1 → พ. 2 ธ.ค. 08:00 NRT T2</small></div></li><li><span class="ok">✓</span><div><b>✈ ขากลับ (เปลี่ยนแล้ว) · XJ611</b><small>พฤ. 10 ธ.ค. 19:45 KIX T1 → ศ. 11 ธ.ค. 00:15 DMK T1</small></div></li><li><span class="ok">✓</span><div><b>🏨 <a href="https://maps.app.goo.gl/qdErPTnujT7FZbkJ6" target="_blank" rel="noopener">MONday Apart Premium Ueno</a></b><small>2–4 ธ.ค. · 2 คืน · เช็คอิน 15:00</small></div></li><li><span class="ok">✓</span><div><b>🏨 <a href="https://www.google.com/maps/search/?api=1&amp;query=ESLEAD+HOTEL+Osaka+Ebisu" target="_blank" rel="noopener">ESLEAD HOTEL Osaka Ebisu</a></b><small>4–10 ธ.ค. · 6 คืน · เช็คอิน หลัง 16:00</small></div></li><li><span class="ok">✓</span><div><b>🏨 <a href="https://www.google.com/maps/search/?api=1&amp;query=Takayama+Ouan+Hotel" target="_blank" rel="noopener">Takayama Ouan Hotel</a></b><small>7–8 ธ.ค. · 1 คืน · เช็คอิน 15:00</small></div></li><li><span class="ok">✓</span><div><b>🚗 รถเช่า Toyota Rent a Car (สาขา Ueno)</b><small>พฤ. 3 ธ.ค. · รับ 08:00 · คืนก่อน 20:00 · ¥14,767 รวมประกันเต็ม (Full Package)</small></div></li></ul></div>
+    <div class="panel"><h3><span class="chip now">จองได้เลย</span></h3>
+      <details class="bk now">
+        <summary><span class="bk-t">ใบขับขี่สากล (คนขับ)</span><span class="bk-d">ก่อนเดินทาง · <em>ทำได้เลย</em></span></summary>
+        <dl><dt>เปิดจอง</dt><dd>ทำที่กรมการขนส่งทางบก ได้ทุกวันทำการ</dd><dt>ช่องทาง</dt><dd>กรมการขนส่งทางบก</dd><dt>ราคา</dt><dd>~฿505</dd></dl>
+        <p class="bk-n">ต้องระบุว่าใช้ที่ญี่ปุ่น → ขอแบบอนุสัญญาเจนีวา 1949 (อายุ 1 ปี) · ถ้าเล่มจากทริป เม.ย. ยังไม่หมดอายุ ใช้เล่มเดิมได้</p>
+      </details>
+      <details class="bk now">
+        <summary><span class="bk-t">Shinkansen Nozomi · Tokyo → Shin-Osaka</span><span class="bk-d">ศ. 4 ธ.ค. · ~12:00 · <em>จองได้เลย</em></span></summary>
+        <dl><dt>เปิดจอง</dt><dd>smartEX เปิดล่วงหน้า 1 ปี (ที่นั่งยืนยันจริง 1 เดือนก่อน 10:00 JST = 08:00 ไทย 4 พ.ย.)</dd><dt>ช่องทาง</dt><dd><a href="https://smart-ex.jp/en/" target="_blank" rel="noopener">smartEX (แอป/เว็บ)</a></dd><dt>ราคา</dt><dd>~¥14,720/คน</dd></dl>
+        <p class="bk-n">เลือกที่นั่งแถว E (คู่ = D-E) ฝั่งขวา เห็นภูเขาไฟฟูจิระหว่างทาง · จอง 4 ที่นั่งติดกัน · กระเป๋าใหญ่เกิน 160 cm (กว้าง+ยาว+สูง) ต้องจองที่นั่งแถวหลังสุดแบบมีที่วางกระเป๋า (ฟรี แต่ต้องจอง) · บางบัตรเครดิตต่างประเทศใช้กับ smartEX ไม่ผ่าน — สำรอง: Klook หรือเคาน์เตอร์ JR</p>
+      </details>
+      <details class="bk now">
+        <summary><span class="bk-t">Shinkansen · Shin-Osaka → Nagoya</span><span class="bk-d">จ. 7 ธ.ค. · ~07:30 · <em>จองได้เลย</em></span></summary>
+        <dl><dt>เปิดจอง</dt><dd>smartEX เปิดล่วงหน้า 1 ปี (ที่นั่งยืนยันจริง 1 เดือนก่อน 10:00 JST = 08:00 ไทย 7 พ.ย.)</dd><dt>ช่องทาง</dt><dd><a href="https://smart-ex.jp/en/" target="_blank" rel="noopener">smartEX</a></dd><dt>ราคา</dt><dd>~¥6,680/คน</dd></dl>
+        <p class="bk-n">ต้องถึง Nagoya ก่อน 08:25 เพื่อต่อ Hida 08:43 (เผื่อเปลี่ยนชานชาลา ~15 นาที) · Nozomi ใช้ ~50 นาที · ผูกตั๋วกับ Suica ในมือถือได้ แตะเข้าสถานีได้เลย</p>
+      </details>
+      <details class="bk now">
+        <summary><span class="bk-t">Shinkansen · Nagoya → Shin-Osaka</span><span class="bk-d">อ. 8 ธ.ค. · ~17:20 · <em>จองได้เลย</em></span></summary>
+        <dl><dt>เปิดจอง</dt><dd>smartEX เปิดล่วงหน้า 1 ปี (ที่นั่งยืนยันจริง 1 เดือนก่อน 10:00 JST = 08:00 ไทย 8 พ.ย.)</dd><dt>ช่องทาง</dt><dd><a href="https://smart-ex.jp/en/" target="_blank" rel="noopener">smartEX</a></dd><dt>ราคา</dt><dd>~¥6,680/คน</dd></dl>
+        <p class="bk-n">smartEX เปลี่ยนเวลาได้ฟรีก่อนรถออก → จองไว้ก่อน ถ้า Hida ช้าค่อยเลื่อนในแอป · ถึง Shin-Osaka ~18:10 · ถึงโรงแรม ~18:45 · ผูกตั๋วกับ Suica ในมือถือได้ แตะเข้าสถานีได้เลย</p>
+      </details>
+      <h3><span class="chip wait">รอเปิดจอง</span></h3>
+      <details class="bk wait">
+        <summary><span class="bk-t">JR Limited Express Hida 3 · Nagoya 08:43 → Takayama 10:58</span><span class="bk-d">จ. 7 ธ.ค. · <em>เปิดจอง ส. 7 พ.ย. 08:00 (เวลาไทย)</em></span></summary>
+        <dl><dt>เปิดจอง</dt><dd>เปิดขาย 1 เดือนก่อน เวลา 10:00 JST</dd><dt>ช่องทาง</dt><dd><a href="https://www.westjr.co.jp/global/en/" target="_blank" rel="noopener">JR-West Online (e5489) / Klook-KKday / เคาน์เตอร์ JR</a></dd><dt>ราคา</dt><dd>~¥6,140/คน</dd></dl>
+        <p class="bk-n">⚠️ แผนแม่ (22 ต.ค.) บอกว่า smartEX รวมตั๋ว Hida ให้ได้ — smartEX ขายเฉพาะชินคันเซ็น Tokaido/Sanyo/Kyushu ต้องจอง Hida แยกช่องทางนี้ · ตั้งปลุกจองวันเปิด — นั่งฝั่งซ้าย/Wide View ชมวิวหุบเขา · ⚠️ ต.ค. 2026 มีข่าว JR Central ขาดขบวนรถ HC85 (อุบัติเหตุ 2 ต.ค.) ทำให้ Hida บางเที่ยวงดวิ่ง → เช็คประกาศ JR Central อีกครั้งตอนจอง · ทางเลือก: Hida 25 ตรงจาก Osaka 07:58 → Takayama 12:14 (ไม่ต้องเปลี่ยนรถ วันละเที่ยว — ต้องเช็คว่ายังวิ่ง)</p>
+      </details>
+      <details class="bk wait">
+        <summary><span class="bk-t">Nohi Bus · Takayama ⇄ Shirakawago (ไป-กลับ)</span><span class="bk-d">จ. 7 ธ.ค. · ไป 12:50 (หรือ 11:50) · กลับ 16:15/16:35 · <em>เปิดจอง ส. 7 พ.ย. ~06:00 (เวลาไทย)</em></span></summary>
+        <dl><dt>เปิดจอง</dt><dd>เปิดจอง 1 เดือนก่อน · แผนแม่: 08:00 JST (= 06:00 ไทย) — ยังไม่ยืนยันเวลาจากเว็บทางการ เข้าไปเช็คตั้งแต่ 06:00</dd><dt>ช่องทาง</dt><dd><a href="https://japanbusonline.com/en/CourseSearch/11900040002" target="_blank" rel="noopener">Japan Bus Online</a></dd><dt>ราคา</dt><dd>¥2,800/คน/เที่ยว (ไป-กลับ ¥5,600)</dd></dl>
+        <p class="bk-n">เลือกรอบที่เป็น Reservation Required เท่านั้น จะได้ที่นั่งแน่นอน · จ่ายบัตรแล้วได้ e-ticket ทางอีเมล · ⚠️ แผนแม่เขียนกลับ 16:55 — ตารางจริงไม่มีรอบนี้ มี 16:15 (ถึง 17:20) · 16:35 (ถึง 17:25) · 17:25 · 17:30 · ตารางที่เห็นเป็นฉบับปัจจุบัน ต้องเช็คตารางฤดูหนาวอีกครั้งวันจอง · หิมะหนักรถอาจช้า 2 ชม.+</p>
+      </details>
+      <details class="bk wait">
+        <summary><span class="bk-t">JR Limited Express Hida 14 · Takayama 14:46 → Nagoya 17:04</span><span class="bk-d">อ. 8 ธ.ค. · <em>เปิดจอง อา. 8 พ.ย. 08:00 (เวลาไทย)</em></span></summary>
+        <dl><dt>เปิดจอง</dt><dd>เปิดขาย 1 เดือนก่อน เวลา 10:00 JST</dd><dt>ช่องทาง</dt><dd><a href="https://www.westjr.co.jp/global/en/" target="_blank" rel="noopener">JR-West Online (e5489) / Klook-KKday / เคาน์เตอร์ JR</a></dd><dt>ราคา</dt><dd>~¥6,140/คน</dd></dl>
+        <p class="bk-n">⚠️ แผนแม่ (22 ต.ค.) บอกว่า smartEX รวมตั๋ว Hida ให้ได้ — smartEX ขายเฉพาะชินคันเซ็น Tokaido/Sanyo/Kyushu ต้องจอง Hida แยกช่องทางนี้ · แผนแม่เขียน 14:38 — ตารางจริงออก 14:46 · ถ้าพลาด: Hida 16 ออก 15:34 → Nagoya 18:06</p>
+      </details>
+      <h3><span class="chip none">ไม่ต้องจองล่วงหน้า</span></h3>
+      <details class="bk none">
+        <summary><span class="bk-t">Nohi Bus · Takayama ⇄ Shinhotaka Ropeway</span><span class="bk-d">อ. 8 ธ.ค. · ไป 07:40 · กลับ 11:55 · <em>ไม่ต้องจอง</em></span></summary>
+        <dl><dt>เปิดจอง</dt><dd>ไม่ต้องจอง (ขึ้นจาก Takayama Bus Center)</dd><dt>ช่องทาง</dt><dd><a href="https://www.nouhibus.co.jp/route_bus/shinhotaka-line-en/" target="_blank" rel="noopener">ซื้อตั๋วที่ Takayama Nohi Bus Center</a></dd><dt>ราคา</dt><dd>¥2,200/คน/เที่ยว (ไป-กลับ ¥4,400) · หรือ Okuhida Value Ticket 2 วัน ~¥7,000/คน รวมกระเช้า (ราคาจาก Veltra ~US$46)</dd></dl>
+        <p class="bk-n">แผนแม่: ซื้อ &quot;Okuhida Value Ticket&quot; (2 วัน) ที่ Takayama Nohi Bus Center พอถึงวันที่ 7 — รวมรถบัสไป-กลับ Shinhotaka + กระเช้า (~¥7,000/คน ถูกกว่าซื้อแยก ¥8,200) · ถ้าซื้อออนไลน์ (Veltra/Klook) ต้องมีเน็ต ใช้ภาพแคปไม่ได้ · ซื้อตั๋วที่เคาน์เตอร์/ตู้ตั้งแต่เย็นวันที่ 7 ได้เลย ถามตั๋วชุดรวมกระเช้า (ถูกกว่าซื้อแยก) · ⚠️ ตารางบนเว็บระบุบางรอบวิ่งถึง 30 พ.ย. → ต้องเช็คตารางฤดูหนาว (1 ธ.ค.–) ว่ารอบ 07:40 ยังมี · ขากลับ 11:55 ถึง Takayama ~13:31</p>
+      </details>
+      <details class="bk none">
+        <summary><span class="bk-t">กระเช้า Shinhotaka Ropeway (2 ช่วง ไป-กลับ)</span><span class="bk-d">อ. 8 ธ.ค. · 09:00–11:30 · <em>ไม่ต้องจอง</em></span></summary>
+        <dl><dt>เปิดจอง</dt><dd>ไม่ต้องจองล่วงหน้า</dd><dt>ช่องทาง</dt><dd><a href="https://shinhotaka-ropeway.jp/en/" target="_blank" rel="noopener">ซื้อหน้างาน / รวมในตั๋วชุด Nohi Bus</a></dd><dt>ราคา</dt><dd>~¥3,800/คน</dd></dl>
+        <p class="bk-n">เวลาฤดูหนาว (1 ธ.ค.–31 มี.ค.) 09:00–15:30 · ปิดซ่อมประจำปี 24–27 พ.ย. 2026 (ไม่ชนวันเรา ✓) · ลมแรง/พายุหิมะอาจหยุดวิ่ง → เช็คสถานะเช้าวันที่ 8 · แผนสำรอง: เมืองเก่า Takayama (Sanmachi Suji) + ตลาดเช้า Miyagawa</p>
+      </details>
+      <details class="bk none">
+        <summary><span class="bk-t">Keisei Skyliner · NRT → Keisei-Ueno</span><span class="bk-d">พ. 2 ธ.ค. · ~09:30 · <em>ไม่จำเป็นต้องจอง</em></span></summary>
+        <dl><dt>เปิดจอง</dt><dd>ซื้อวันถึงได้ (มีขายออนไลน์ล่วงหน้าด้วย)</dd><dt>ช่องทาง</dt><dd>เคาน์เตอร์ Keisei ที่ NRT / Klook</dd><dt>ราคา</dt><dd>¥2,580/คน (ซื้อออนไลน์ ~¥2,300)</dd></dl>
+        <p class="bk-n">วิ่งทุก 20–40 นาที · ซื้อหลังผ่าน ตม. จะไม่ต้องกังวลเรื่องเครื่องดีเลย์ · แผนแม่: ซื้อล่วงหน้าผ่าน Klook/KKday ได้ถูกกว่า แล้วสแกน QR ที่ตู้สีน้ำเงินในสนามบิน</p>
+      </details>
+      <details class="bk none">
+        <summary><span class="bk-t">Nankai Airport Express · Shin-Imamiya → KIX</span><span class="bk-d">พฤ. 10 ธ.ค. · ~15:00 · <em>ไม่ต้องจอง</em></span></summary>
+        <dl><dt>เปิดจอง</dt><dd>ไม่ต้องจอง</dd><dt>ช่องทาง</dt><dd>แตะ IC card</dd><dt>ราคา</dt><dd>~¥970/คน</dd></dl>
+        <p class="bk-n">แผนแม่เขียน HARUKA จาก Tennoji/Shin-Imamiya — HARUKA ไม่จอด Shin-Imamiya (จอด Tennoji) · จากโรงแรม Ebisu ใช้ Nankai ที่ Shin-Imamiya ง่ายและถูกกว่า ~40 นาที</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="wrap" id="budget">
+  <div class="sec-head"><p class="eyebrow">เงินเยน + เงินบาท · ¥100 ≈ ฿21</p><h2>งบประมาณ</h2></div>
+  <div class="bgrid budget">
+    <div class="panel grad-brand">
+      <p class="eyebrow">รวมทั้งทริป 4 คน (ประมาณ)</p>
+      <p class="big">฿233,067</p>
+      <p class="sub">¥1,109,841 · ต่อคน <b>฿58,267</b></p>
+      <div class="sbar"><i class="paid" style="width:41.9%" title="จ่ายแล้ว ฿97,646"></i><i class="booked" style="width:12.3%" title="จองแล้ว · จ่ายทีหลัง ฿28,768"></i><i class="est" style="width:45.8%" title="ประมาณการ ฿106,653"></i></div>
+      <div class="bkeys"><div class="bkey paid"><span></span><div><b>฿97,646</b><small>จ่ายแล้ว · ¥464,979</small></div></div><div class="bkey booked"><span></span><div><b>฿28,768</b><small>จองแล้ว · จ่ายทีหลัง · ¥136,989</small></div></div><div class="bkey est"><span></span><div><b>฿106,653</b><small>ประมาณการ · ¥507,873</small></div></div></div>
+      <p class="fine light">¥100 ≈ ฿21 · อัตราอ้างอิงช่วง ส.ค.–ต.ค. 2026 (~0.208–0.214) · ปัดขึ้นเผื่อค่าธรรมเนียมบัตร · ควรเช็คอีกครั้งก่อนแลกเงิน · ไม่รวมช้อปปิ้งส่วนตัว</p>
+    </div>
+    <div class="panel"><div class="tw"><table class="btable">
+      <thead><tr><th>รายการ</th><th class="num">เยน</th><th class="num">บาท</th><th>สถานะ</th></tr></thead>
+      <tbody><tr class="paid"><td><b>✈ เที่ยวบิน</b><small>Thai AirAsia X ไป-กลับ 4 คน (Trip.com)</small><small class="n">จ่ายแล้ว 27 มี.ค. · ยังไม่รวมส่วนต่าง/ค่าธรรมเนียมเปลี่ยนวันกลับ (18 ก.ย.) ถ้ามี</small></td><td class="num">¥389,927</td><td class="num">฿81,885</td><td><span class="st paid">จ่ายแล้ว</span></td></tr><tr class="paid"><td><b>🏨 ที่พัก</b><small>MONday Apart Premium Ueno · 2 คืน</small><small class="n">จ่ายแล้ว 3 ก.ค.</small></td><td class="num">¥75,052</td><td class="num">฿15,761</td><td><span class="st paid">จ่ายแล้ว</span></td></tr><tr class="booked"><td><b>🏨 ที่พัก</b><small>ESLEAD Osaka Ebisu · 6 คืน</small><small class="n">Agoda ตัดบัตร 29 พ.ย.</small></td><td class="num">¥83,897</td><td class="num">฿17,618</td><td><span class="st booked">จองแล้ว · จ่ายทีหลัง</span></td></tr><tr class="booked"><td><b>🏨 ที่พัก</b><small>Takayama Ouan · 1 คืน</small><small class="n">จ่ายภายหลังผ่าน Agoda · ไม่รวมอาหารเช้า</small></td><td class="num">¥38,325</td><td class="num">฿8,048</td><td><span class="st booked">จองแล้ว · จ่ายทีหลัง</span></td></tr><tr class="est"><td><b>🚄 เดินทางระหว่างเมือง</b><small>Shinkansen · JR Hida · Nohi Bus · Skyliner · กระเช้า (4 คน) — ตามแผนที่เลือก</small><small class="n">คำนวณจากหน้าเทียบแผน (ไม่รวมรถเช่าวันฟูจิ)</small></td><td class="num">¥226,040</td><td class="num">฿47,468</td><td><span class="st est">ประมาณการ</span></td></tr><tr class="booked"><td><b>🚗 รถเช่าวันฟูจิ</b><small>Toyota C2 1 วัน รวมประกันเต็ม</small><small class="n">จองแล้ว 23 ต.ค. · จ่ายที่ร้านวันรับรถ</small></td><td class="num">¥14,767</td><td class="num">฿3,101</td><td><span class="st booked">จองแล้ว · จ่ายทีหลัง</span></td></tr><tr class="est"><td><b>🚗 รถเช่าวันฟูจิ</b><small>ทางด่วน (ETC) + น้ำมัน</small><small class="n">ทางด่วนไป-กลับ ~¥7,000–8,500 + น้ำมัน ~¥3,000</small></td><td class="num">¥10,500</td><td class="num">฿2,205</td><td><span class="st est">ประมาณการ</span></td></tr><tr class="est"><td><b>🚇 รถในเมือง</b><small>IC card (Suica/ICOCA) ~¥1,500/คน/วัน × 8 วัน</small><small class="n">Kyoto · Nara · Katsuo-ji · Osaka · Tokyo</small></td><td class="num">¥48,000</td><td class="num">฿10,080</td><td><span class="st est">ประมาณการ</span></td></tr><tr class="est"><td><b>🍜 อาหาร</b><small>~¥5,000/คน/วัน × 9 วัน</small><small class="n">มื้อพิเศษ: เนื้อฮิดะ, ซีฟู้ด Tsukiji/Kuromon</small></td><td class="num">¥180,000</td><td class="num">฿37,800</td><td><span class="st est">ประมาณการ</span></td></tr><tr class="est"><td><b>🎟 ค่าเข้าชม</b><small>วัด · สวน · อื่นๆ</small><small class="n">Katsuo-ji ~¥500/คน, Todai-ji ~¥800/คน ฯลฯ</small></td><td class="num">¥10,000</td><td class="num">฿2,100</td><td><span class="st est">ประมาณการ</span></td></tr><tr class="est"><td><b>🛡 ประกัน + eSIM</b><small>ประกันเดินทาง 4 คน + eSIM 4 ซิม</small><small class="n">ประมาณการ · ยังไม่ได้ซื้อ</small></td><td class="num">¥33,333</td><td class="num">฿7,000</td><td><span class="st est">ประมาณการ</span></td></tr></tbody>
+      <tfoot><tr><td>รวม</td><td class="num">¥1,109,841</td><td class="num">฿233,067</td><td></td></tr>
+        <tr><td>ต่อคน</td><td class="num">¥277,460</td><td class="num">฿58,267</td><td></td></tr></tfoot>
+    </table></div>
+      <p class="fine">ค่ารถแยกรายวัน + เทียบแผน JR Pass → <a href="discuss.html#plans">หน้าคุยกัน</a></p>
+    </div>
+  </div>
+</section>
+
+<section class="wrap" id="todo">
+  <div class="sec-head"><p class="eyebrow">ติ๊กเล่นได้ (จำไว้ในเครื่องนี้)</p><h2>ต้องทำก่อนไป</h2></div>
+  <div class="bgrid">
+    <div class="panel"><ul class="check"><li class="hi"><label><input type="checkbox" data-id="accounts"><span class="box"></span><span class="txt"><b>สมัคร account + ผูกบัตรเครดิต smartEX และ Japan Bus Online</b><span class="due">ก่อน 4 พ.ย.</span><small>ทำก่อนวันเปิดจอง 1–2 วัน (ก่อน 4 พ.ย.) จะได้กดจ่ายทันที ไม่หลุดคิว · tip จากแผนแม่</small></span></label></li><li class="hi"><label><input type="checkbox" data-id="studless"><span class="box"></span><span class="txt"><b>ยืนยันยาง studless กับ Toyota สาขา Ueno Station</b><span class="due">ก่อน 3 ธ.ค.</span><small>อีเมลยืนยันไม่ได้ระบุ · โทร 03-3833-9678 (08:00–20:00 JST) หรือถามตอนรับรถ</small></span></label></li><li class="hi"><label><input type="checkbox" data-id="vjw"><span class="box"></span><span class="txt"><b>ลงทะเบียน Visit Japan Web ทุกคน (ตม. + ศุลกากร)</b><span class="due">ก่อน 1 ธ.ค.</span><small>ได้ QR ไว้สแกนตอนเข้าประเทศที่ NRT · ทำก่อนบิน</small></span></label></li><li class="hi"><label><input type="checkbox" data-id="intl-license"><span class="box"></span><span class="txt"><b>ใบขับขี่สากล (แบบเจนีวา 1949)</b><span class="due">ตอนนี้</span><small>กรมการขนส่งทางบก · เช็คว่าเล่มเดิมยังไม่หมดอายุ</small></span></label></li><li class="hi"><label><input type="checkbox" data-id="hotel-osaka-old"><span class="box"></span><span class="txt"><b>ยืนยันว่า booking Ebisu เดิม (4 คืน 5–8 ธ.ค.) ยกเลิกแล้ว</b><span class="due">ตอนนี้</span><small>ตอนนี้มี booking ใหม่ 6 คืนของแม่แล้ว — กันจ่ายซ้ำ</small></span></label></li><li class="hi"><label><input type="checkbox" data-id="shinkansen"><span class="box"></span><span class="txt"><b>จอง Shinkansen 3 ขาใน smartEX</b><span class="due">ตอนนี้</span><small>4 ธ.ค. Tokyo→Shin-Osaka · 7 ธ.ค. Shin-Osaka→Nagoya · 8 ธ.ค. Nagoya→Shin-Osaka</small></span></label></li><li class="hi"><label><input type="checkbox" data-id="hida-out"><span class="box"></span><span class="txt"><b>จอง JR Hida 3 (Nagoya 08:43 → Takayama) + Nohi Bus Shirakawago ไป-กลับ</b><span class="due">7 พ.ย.</span><small>ส. 7 พ.ย. · Nohi Bus ~06:00 เวลาไทย (ตามแผนแม่ ยังไม่ยืนยัน) · JR Hida 08:00 เวลาไทย</small></span></label></li><li class="hi"><label><input type="checkbox" data-id="hida-back"><span class="box"></span><span class="txt"><b>จอง JR Hida 14 (Takayama 14:46 → Nagoya)</b><span class="due">8 พ.ย.</span><small>เปิดจอง อา. 8 พ.ย. 08:00 เวลาไทย</small></span></label></li><li class=""><label><input type="checkbox" data-id="suica"><span class="box"></span><span class="txt"><b>เพิ่ม Suica ใน Apple Wallet ทุกคน + เติมเงิน</b><small>ใช้รถไฟ/รถบัสในเมือง + ผูกตั๋ว smartEX ได้</small></span></label></li><li class=""><label><input type="checkbox" data-id="ebisu-charge"><span class="box"></span><span class="txt"><b>Agoda ตัดบัตรค่า ESLEAD Ebisu ¥83,897</b><span class="due">29 พ.ย.</span><small>ตัดอัตโนมัติ 29 พ.ย. · ยกเลิกฟรีได้ถึง 30 พ.ย.</small></span></label></li><li class=""><label><input type="checkbox" data-id="insurance"><span class="box"></span><span class="txt"><b>ซื้อประกันเดินทาง 4 คน · คุ้มครอง 1–11 ธ.ค.</b><small>วันกลับเปลี่ยนเป็น 11 ธ.ค. แล้ว</small></span></label></li><li class=""><label><input type="checkbox" data-id="visa-check"><span class="box"></span><span class="txt"><b>ตรวจ passport ทุกคน · ต้องเหลือ &gt;6 เดือน (หมดหลัง มิ.ย. 2027)</b></span></label></li><li class=""><label><input type="checkbox" data-id="esim"><span class="box"></span><span class="txt"><b>สั่ง eSIM 4 ซิม ~9–10 วัน</b></span></label></li><li class=""><label><input type="checkbox" data-id="cash"><span class="box"></span><span class="txt"><b>แลกเงินสด ¥ + เติม YouTrip</b><small>ทริปยาวขึ้น 1 วัน · รถบัส Shinhotaka/ร้านเล็กใน Takayama-Shirakawago ใช้เงินสดเยอะ</small></span></label></li><li class=""><label><input type="checkbox" data-id="winter-clothes"><span class="box"></span><span class="txt"><b>เสื้อหนาว + รองเท้ากันลื่น</b><small>แผนแม่: ซื้อเพิ่มที่ Ueno/Okachimachi คืนแรก (2 ธ.ค.)</small></span></label></li></ul></div>
+    <div class="side">
+      <div class="panel grad-ks"><h3>⏰ ตั้งปลุก (เวลาไทย)</h3><ol class="timeline"><li><b>4 พ.ย.</b><span class="tm">08:00</span><span>Shinkansen ที่นั่งเปิด (smartEX)</span></li><li><b>7 พ.ย.</b><span class="tm">~06:00</span><span>Nohi Bus ไป Shirakawago</span></li><li><b>7 พ.ย.</b><span class="tm">08:00</span><span>JR Hida 3 ขาไป Takayama + Shinkansen → Nagoya</span></li><li><b>8 พ.ย.</b><span class="tm">08:00</span><span>JR Hida 14 ขากลับ + Shinkansen Nagoya → Osaka</span></li><li><b>29 พ.ย.</b><span class="tm"></span><span>Agoda ตัดบัตร ESLEAD Ebisu</span></li><li><b>30 พ.ย.</b><span class="tm"></span><span>วันสุดท้ายยกเลิกโรงแรมฟรี</span></li></ol></div>
+      <div class="panel"><h3>❓ รอที่บ้านตัดสินใจ</h3><ul class="qs"><li>booking Ebisu เดิม (Triple Family 4 คืน 5–8 ธ.ค. ฿12,448) ยกเลิกแล้วใช่ไหม?</li><li>มณฑลขับรถวันฟูจิ — ใบขับขี่สากลเล่มเดิม (ทริป เม.ย.) ยังไม่หมดอายุใช่ไหม?</li><li>รถบัสไป Shirakawago: รอบ 12:50 ตามแผนแม่ หรือ 11:50 (ได้เวลาเดินเพิ่มก่อนมืด)?</li><li>ประกัน: MSIG เหมือนเดิม หรือแบรนด์อื่น?</li></ul><a class="link" href="discuss.html">ดูทางเลือก + เทียบแผน JR Pass →</a></div>
+    </div>
+  </div>
+  <details class="more"><summary>🧥 แต่งตัวยังไงให้อุ่น</summary><ul class="tips"><li>แต่งตัวแบบ Layering: ชั้นใน Heattech หนาสุด → ชั้นกลางเสื้อขนฟู/สเวตเตอร์ → ชั้นนอกโค้ทหรือแจ็คเก็ตที่กันลมและกันน้ำ (หิมะละลายแล้วเสื้อชื้นจะหนาวสั่น)</li><li>พกแว่นกันแดดไปกระเช้า Shinhotaka — แดดสะท้อนลานหิมะจ้ามาก</li><li>ไคโระแบบแปะถุงเท้า + แบบใส่กระเป๋าเสื้อ ติดตัววัน Shirakawago / Shinhotaka</li><li>อุณหภูมิ: Tokyo/Osaka 4–12°C · Takayama/Shirakawago −3 ถึง 5°C · ยอด Shinhotaka −5 ถึง −10°C</li></ul></details>
+  <details class="more"><summary>📍 พิกัด &amp; ร้านที่อยากไป (เปิด Google Maps)</summary><div class="pgrid"><div class="pg"><h4>🗼 ย่านอุเอโนะ (โตเกียว) — ที่พัก · ช้อปปิ้ง · รับรถเช่า</h4><ul><li><a href="https://maps.app.goo.gl/qdErPTnujT7FZbkJ6" target="_blank" rel="noopener">MONday Apart Premium UENO</a><small>โรงแรมที่พัก · สไตล์อพาร์ตเมนต์ ใกล้สถานี Ueno</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=%E3%83%88%E3%83%A8%E3%82%BF%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC+%E4%B8%8A%E9%87%8E%E9%A7%85%E5%89%8D%E5%BA%97" target="_blank" rel="noopener">Toyota Rent a Car สาขา Ueno</a><small>จุดรับรถไปฟูจิ · 3-19-10 Higashi-Ueno · เดิน 2 นาทีจาก JR Ueno ทางออก Asakusa/Higashi-Ueno · เปิด 08:00–20:00</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=Art+Sports+ODBOX+Ueno" target="_blank" rel="noopener">Art Sports ODBOX (Ueno/Okachimachi)</a><small>รองเท้า On Cloud (Tax-free คนไม่แน่น) + ถุงมือกันน้ำ · ice grips สวมรองเท้า · ถุงเท้า Merino</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=UNIQLO+Okachimachi" target="_blank" rel="noopener">UNIQLO / GU Okachimachi</a><small>เดิน 8–10 นาทีจากที่พัก · Heattech Ultra Warm เสื้อ+ลองจอน · Ultra Light Down · ถุงมือ หมวก · GU โค้ท/ฟลีซราคาประหยัด</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=mont-bell+Okachimachi" target="_blank" rel="noopener">Mont-bell Okachimachi</a><small>แบรนด์เอาท์ดอร์ญี่ปุ่น · Down Jacket + กางเกงกันน้ำ เหมาะกับกระเช้า Shinhotaka</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=Ameyoko+Shopping+Street" target="_blank" rel="noopener">Ameyoko Shopping Street</a><small>สตรีทฟู้ด ของฝาก · Matsumoto Kiyoshi/ร้านขายยา: ซื้อไคโระ (Kairo カイロ) แบบแปะถุงเท้า + แบบใส่กระเป๋าเสื้อ</small></li></ul></div><div class="pg"><h4>🚗 จุดขับรถเที่ยวรอบฟูจิ (คาวากุจิโกะ)</h4><ul><li><a href="https://www.google.com/maps/search/?api=1&amp;query=Chureito+Pagoda" target="_blank" rel="noopener">Chureito Pagoda</a><small>เจดีย์แดงคู่ฟูจิ · ลานจอดรถด้านล่าง</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=Oishi+Park+Kawaguchiko" target="_blank" rel="noopener">Oishi Park</a><small>สวนริมทะเลสาบ · จอดฟรี</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=Hoto+Fudo+Higashikoiji" target="_blank" rel="noopener">Hoto Fudou (Higashikoiji)</a><small>อุด้งหม้อไฟ · ร้านทรงก้อนเมฆ · ที่จอดกว้าง</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=Oshino+Hakkai" target="_blank" rel="noopener">Oshino Hakkai</a><small>หมู่บ้านน้ำใส · ที่จอดเอกชน ~¥300</small></li></ul></div><div class="pg"><h4>🏔 Takayama · Shirakawago · Shinhotaka</h4><ul><li><a href="https://www.google.com/maps/search/?api=1&amp;query=Takayama+Ouan+Hotel" target="_blank" rel="noopener">Takayama Ouan Hotel</a><small>ที่พักคืน 7 ธ.ค. · ออนเซ็นดาดฟ้า ใกล้สถานี</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=Takayama+Nohi+Bus+Center" target="_blank" rel="noopener">Takayama Nohi Bus Center</a><small>ติดสถานี JR Takayama · จุดขึ้นรถไป Shirakawago และกระเช้า</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=Shirakawa-go+Bus+Terminal" target="_blank" rel="noopener">Shirakawa-go Bus Terminal</a><small>จุดลงรถหลัก เดินเข้าหมู่บ้าน</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=Shinhotaka+Ropeway" target="_blank" rel="noopener">Shinhotaka Ropeway</a><small>กระเช้าลอยฟ้า 2 ชั้น</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=Ajikura+Tengoku+Takayama" target="_blank" rel="noopener">Ajikura Tengoku</a><small>ปิ้งย่างเนื้อฮิดะ · เดิน 1 นาทีจากสถานี · คิวแน่น</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=Hidagyu+Maruaki+Takayama" target="_blank" rel="noopener">Hidagyu Maruaki (สาขาหลัก)</a><small>ปิ้งย่างเนื้อฮิดะ · เดิน 5 นาทีจากโรงแรม</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=Daily+Yamazaki+Takayama+Station" target="_blank" rel="noopener">Daily Yamazaki (หน้าสถานี Takayama)</a><small>24 ชม. · ขนมปังอบสด แซนด์วิช โอนิกิริ กาแฟร้อน</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=%E3%81%8A%E3%81%AB%E3%81%8E%E3%82%8A%E5%AE%B6+%E9%AB%98%E5%B1%B1%E9%A7%85" target="_blank" rel="noopener">Onigiri-ya (ในสถานี Takayama)</a><small>เปิด 07:00 · ข้าวปั้น Hoba Miso / Hida Beef · ซื้อขึ้นรถบัสได้</small></li></ul></div><div class="pg"><h4>🛍 โอซาก้า · เกียวโต · นารา</h4><ul><li><a href="https://www.google.com/maps/search/?api=1&amp;query=ESLEAD+HOTEL+Osaka+Ebisu" target="_blank" rel="noopener">ESLEAD Hotel Osaka Ebisu</a><small>ที่พักหลัก · ใกล้ Ebisucho / Shin-Imamiya / ย่าน Shinsekai</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=Pokemon+Center+Osaka+Daimaru+Umeda" target="_blank" rel="noopener">Pokémon Center Osaka</a><small>Daimaru Umeda ชั้น 13</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=Hankyu+Umeda+On+running" target="_blank" rel="noopener">On · Hankyu Umeda</a><small>ชั้น 8 โซน Green Age · ตึกติดกับ Daimaru Umeda</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=HOMEGAME+PLUS+OSAKA" target="_blank" rel="noopener">HOMEGAME PLUS OSAKA</a><small>On Cloud · ใจกลาง Dotonbori สต็อกแน่น</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=atmos+Shinsaibashi" target="_blank" rel="noopener">Atmos Shinsaibashi</a><small>สตรีทสนีกเกอร์ · On Cloud รุ่นแฟชั่น</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=Kuromon+Ichiba+Market" target="_blank" rel="noopener">Kuromon Ichiba Market</a><small>ตลาดเช้าวันสุดท้าย (10 ธ.ค.)</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=Fushimi+Inari+Taisha" target="_blank" rel="noopener">Fushimi Inari Shrine</a><small>เกียวโต · อุโมงค์เสาแดง</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=Kiyomizu-dera" target="_blank" rel="noopener">Kiyomizu-dera</a><small>เกียวโต · วัดน้ำใส</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=Nara+Park" target="_blank" rel="noopener">Nara Park</a><small>นารา · สวนกวาง</small></li><li><a href="https://www.google.com/maps/search/?api=1&amp;query=Katsuo-ji+Temple" target="_blank" rel="noopener">Katsuo-ji Temple</a><small>วัดดารุมะ · Hankyu Bus 29 จากสถานี Minoh-Kayano</small></li></ul></div></div></details>
+</section>
+</main>
+<footer class="wrap">
+  <p>อัปเดต 2026-10-22 · แผนรายวันของแม่ (Pattama) 13 ต.ค. 2026 + ตรวจเวลารถ/การจองโดย Claude</p>
+  <p class="fine">แหล่งข้อมูล: <a href="https://rent.toyota.co.jp/eng/faq/" target="_blank" rel="noopener">Toyota Rent a Car — FAQ (จองออนไลน์ล่วงหน้า 3 เดือน)</a> · <a href="https://rent.toyota.co.jp/eng/drive/" target="_blank" rel="noopener">Toyota Rent a Car — ใบขับขี่ที่ใช้ได้ (IDP เจนีวา 1949)</a> · <a href="https://smart-ex.jp/en/product/plan/service/" target="_blank" rel="noopener">smartEX — จองล่วงหน้า 1 ปี</a> · <a href="https://www.nouhibus.co.jp/route_bus/shirakawago_en/" target="_blank" rel="noopener">Nohi Bus — ตาราง Takayama ⇄ Shirakawago</a> · <a href="https://japanbusonline.com/en/CourseSearch/11900040002" target="_blank" rel="noopener">Japan Bus Online — จอง Takayama ⇄ Shirakawago</a> · <a href="https://www.nouhibus.co.jp/route_bus/shinhotaka-line-en/" target="_blank" rel="noopener">Nohi Bus — ตารางสาย Shinhotaka</a> · <a href="https://shinhotaka-ropeway.jp/en/" target="_blank" rel="noopener">Shinhotaka Ropeway — แผนเดินรถปี 2026 (ปิดซ่อม 24–27 พ.ย.)</a> · <a href="https://www.snowmonkeyresorts.com/access/limited-express-hida-timetable/" target="_blank" rel="noopener">ตาราง Limited Express Hida (อัปเดต 10 ต.ค. 2026)</a><br>เวลารถไฟ/รถบัสอ้างอิงตาราง ณ ต.ค. 2026 — ตารางฤดูหนาวอาจปรับ ให้เช็คอีกครั้งวันจอง</p>
+  <p class="fine">แผนที่ © OpenFreeMap · OpenStreetMap · ภาพจาก Wikimedia Commons: <a href="https://commons.wikimedia.org/wiki/File:View_of_Mount_Fuji_from_%C5%8Cwakudani_20211202.jpg" target="_blank" rel="noopener">fuji</a> (Suicasmo · CC BY-SA 4.0) · <a href="https://commons.wikimedia.org/wiki/File:Ameyoko_Ueno_Tokyo_Japan.jpg" target="_blank" rel="noopener">ueno</a> (Wikimedia Commons · CC BY-SA 2.5) · <a href="https://commons.wikimedia.org/wiki/File:Chuurei-tou_Fujiyoshida_17025277650_c59733d6ba_o.jpg" target="_blank" rel="noopener">chureito</a> (https://www.flickr.com/photos/reggiepen/ · CC BY 2.0) · <a href="https://commons.wikimedia.org/wiki/File:Tsukiji_Outer_Market_2.jpg" target="_blank" rel="noopener">tsukiji</a> (Aw1805 · CC BY-SA 3.0) · <a href="https://commons.wikimedia.org/wiki/File:Torii_path_with_lantern_at_Fushimi_Inari_Taisha_Shrine,_Kyoto,_Japan.jpg" target="_blank" rel="noopener">inari</a> (Basile Morin · CC BY-SA 4.0) · <a href="https://commons.wikimedia.org/wiki/File:Nara_Park_-_panoramio_(2).jpg" target="_blank" rel="noopener">nara</a> (Feri88 · CC BY 3.0) · <a href="https://commons.wikimedia.org/wiki/File:Daruma_Dolls_Osaka.JPG" target="_blank" rel="noopener">katsuoji</a> (EllieRH · CC BY-SA 4.0) · <a href="https://commons.wikimedia.org/wiki/File:Shirakawa-go_002.jpg" target="_blank" rel="noopener">shirakawago</a> (tsuda from Tsushima, Aichi, Japan · CC BY-SA 2.0) · <a href="https://commons.wikimedia.org/wiki/File:Takayama%27s_Early_Winter_Welcome_(NE).jpg" target="_blank" rel="noopener">takayama</a> (Nickaura (Nick Sevarg) · CC BY-SA 3.0) · <a href="https://commons.wikimedia.org/wiki/File:Shinhotaka_ropeway01s3200.jpg" target="_blank" rel="noopener">shinhotaka</a> (663highland · CC BY 2.5) · <a href="https://commons.wikimedia.org/wiki/File:Osaka_Dotonbori_Ebisu_Bridge.jpg" target="_blank" rel="noopener">dotonbori</a> (Type specimen · CC BY-SA 3.0) · <a href="https://commons.wikimedia.org/wiki/File:Kuromon-ichiba_in_201408.JPG" target="_blank" rel="noopener">kuromon</a> (Mc681 · CC BY-SA 4.0) · <a href="https://commons.wikimedia.org/wiki/File:Shinsekai_and_Tsutenkaku_at_night_2019-04-12.jpg" target="_blank" rel="noopener">shinsekai</a> (Dick Thomas Johnson from Tokyo, Japan · CC BY 2.0)</p>
+</footer>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script>
+(function () {
+  var el = document.getElementById('countdown'); if (!el) return;
+  var start = new Date('2026-12-01T23:50:00+07:00'), now = new Date();
+  var days = Math.ceil((start - now) / 86400000);
+  el.textContent = days > 0 ? days : '🇯🇵';
+})();
+
+(function () {
+  // scroll a chip strip sideways only — scrollIntoView would also move the page vertically
+  window.centerInStrip = function (el) {
+    var box = el && el.parentElement; if (!box) return;
+    box.scrollTo({left: el.offsetLeft - (box.clientWidth - el.clientWidth) / 2, behavior: 'smooth'});
+  };
+})();
+(function () {
+  // ---- day picker
+  var cards = [].slice.call(document.querySelectorAll('.day')), chips = [].slice.call(document.querySelectorAll('.dchip'));
+  function showDay(n, scroll) {
+    cards.forEach(function (c) { c.hidden = c.dataset.day != n; });
+    chips.forEach(function (c) { c.classList.toggle('on', c.dataset.day == n); c.setAttribute('aria-selected', c.dataset.day == n); });
+    centerInStrip(document.querySelector('.dchip.on'));
+    if (scroll) document.getElementById('days').scrollIntoView({behavior: 'smooth'});
+  }
+  chips.forEach(function (c) { c.addEventListener('click', function () { showDay(c.dataset.day); }); });
+  var m = location.hash.match(/^#day(\d+)$/);
+  showDay(m ? m[1] : (function () {           // during the trip, open today's card
+    var t = new Date(), d = t.getDate();
+    return (t.getFullYear() === 2026 && t.getMonth() === 11 && d <= 11) ? d : 1;
+  })(), !!m);
+  document.addEventListener('click', function (ev) {
+    var a = ev.target.closest('a[data-day]'); if (!a) return;
+    ev.preventDefault(); showDay(a.dataset.day, true);
+  });
+
+  // ---- checklist ticks: per-viewer convenience only
+  var KEY = 'jp26-ticks', ticks = {};
+  try { ticks = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
+  document.querySelectorAll('.check input').forEach(function (cb) {
+    cb.checked = !!ticks[cb.dataset.id];
+    cb.addEventListener('change', function () {
+      ticks[cb.dataset.id] = cb.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(ticks)); } catch (e) {}
+    });
+  });
+})();
+
+(function () {
+  var STOPS = [{"name": "Ueno · Ameyoko", "lat": 35.7105, "lng": 139.7745, "zoom": 15.6, "pitch": 62, "bearing": -20, "cls": "tk", "img": "img/ueno.jpg"}, {"name": "Mt. Fuji · Chureito", "lat": 35.452, "lng": 138.79, "zoom": 11.2, "pitch": 72, "bearing": 215, "cls": "tk", "img": "img/chureito.jpg"}, {"name": "Tsukiji Outer Market", "lat": 35.6654, "lng": 139.7707, "zoom": 16, "pitch": 60, "bearing": 30, "cls": "tk", "img": "img/tsukiji.jpg"}, {"name": "Kyoto · Fushimi Inari", "lat": 34.9671, "lng": 135.7727, "zoom": 15, "pitch": 65, "bearing": 80, "cls": "ks", "img": "img/inari.jpg"}, {"name": "Nara Park", "lat": 34.687, "lng": 135.84, "zoom": 14.8, "pitch": 60, "bearing": 0, "cls": "ks", "img": "img/nara.jpg"}, {"name": "Katsuo-ji", "lat": 34.8668, "lng": 135.4925, "zoom": 14.5, "pitch": 68, "bearing": -30, "cls": "ks", "img": "img/katsuoji.jpg"}, {"name": "Takayama", "lat": 36.1405, "lng": 137.256, "zoom": 14.2, "pitch": 65, "bearing": 40, "cls": "sh", "img": "img/takayama.jpg"}, {"name": "Shirakawa-go", "lat": 36.2577, "lng": 136.906, "zoom": 14.6, "pitch": 72, "bearing": 160, "cls": "sh", "img": "img/shirakawago.jpg"}, {"name": "Shinhotaka Ropeway", "lat": 36.2935, "lng": 137.59, "zoom": 12.6, "pitch": 76, "bearing": 70, "cls": "sh", "img": "img/shinhotaka.jpg"}, {"name": "Osaka · Dotonbori", "lat": 34.6687, "lng": 135.5013, "zoom": 15.8, "pitch": 62, "bearing": -15, "cls": "ks2", "img": "img/dotonbori.jpg"}, {"name": "Kuromon → KIX", "lat": 34.6654, "lng": 135.5066, "zoom": 15.4, "pitch": 60, "bearing": 20, "cls": "ks2", "img": "img/kuromon.jpg"}], LINES = [{"color": "#6366f1", "path": [[140.386, 35.772], [139.7745, 35.7105]]}, {"color": "#06b6d4", "path": [[139.7745, 35.7105], [138.79, 35.452]]}, {"color": "#8b5cf6", "path": [[139.7707, 35.6654], [139.622, 35.466], [136.882, 35.171], [135.758, 34.985], [135.5, 34.733]]}, {"color": "#f43f5e", "path": [[135.5, 34.733], [135.7727, 34.9671]]}, {"color": "#f59e0b", "path": [[135.5, 34.733], [135.84, 34.687]]}, {"color": "#f97316", "path": [[135.5, 34.733], [135.4925, 34.8668]]}, {"color": "#10b981", "path": [[135.5, 34.733], [136.882, 35.171], [137.24, 35.8], [137.256, 36.1405], [136.906, 36.2577]]}, {"color": "#3b82f6", "path": [[137.256, 36.1405], [137.59, 36.2935]]}, {"color": "#d946ef", "path": [[135.5013, 34.6687], [135.23, 34.432]]}];
+  var cards = [].slice.call(document.querySelectorAll('.tcard')), dots = [].slice.call(document.querySelectorAll('.stop'));
+  var i = 0, timer = null, map = null, flown = false;
+  var ALL = {center: [137.3, 35.55], zoom: 6.3, pitch: 45, bearing: -12};
+
+  function select(n, fly) {
+    i = (n + STOPS.length) % STOPS.length;
+    cards.forEach(function (c, k) { c.hidden = k !== i; });
+    dots.forEach(function (d, k) { d.classList.toggle('on', k === i); d.setAttribute('aria-selected', k === i); });
+    centerInStrip(dots[i]);
+    var s = STOPS[i];
+    if (map && fly !== false) flown = true, map.flyTo({center: [s.lng, s.lat], zoom: s.zoom, pitch: s.pitch, bearing: s.bearing, duration: 4200, essential: true});
+  }
+  function stop() { clearInterval(timer); timer = null; play.textContent = '▶ เล่นทัวร์'; play.classList.remove('on'); }
+  var play = document.getElementById('t-play');
+  play.addEventListener('click', function () {
+    if (timer) return stop();
+    play.textContent = '⏸ หยุด'; play.classList.add('on');
+    select(flown ? i + 1 : i); timer = setInterval(function () { select(i + 1); }, 7500);
+  });
+  document.getElementById('t-next').addEventListener('click', function () { stop(); select(i + 1); });
+  document.getElementById('t-prev').addEventListener('click', function () { stop(); select(i - 1); });
+  document.getElementById('t-all').addEventListener('click', function () { stop(); if (map) map.flyTo(Object.assign({duration: 3000}, ALL)); });
+  dots.forEach(function (d) { d.addEventListener('click', function () { stop(); select(+d.dataset.i); }); });
+  select(0, false);
+
+  function nomap() { map = null; document.getElementById('map3d').classList.add('nomap'); }
+  if (!window.maplibregl) return nomap();
+  try {  // throws when the device has no WebGL (old phones, some battery-saver modes)
+    map = new maplibregl.Map({
+      container: 'map3d', style: 'https://tiles.openfreemap.org/styles/liberty',
+      center: ALL.center, zoom: ALL.zoom, pitch: ALL.pitch, bearing: ALL.bearing, maxPitch: 80,
+      attributionControl: {compact: true}, cooperativeGestures: true
+    });
+  } catch (err) { console.warn('[map]', err && err.message); return nomap(); }
+  map.addControl(new maplibregl.NavigationControl({visualizePitch: true}), 'top-right');
+  map.on('error', function (ev) { console.warn('[map]', ev.error && ev.error.message); });
+  map.on('load', function () {
+    map.addSource('dem', {type: 'raster-dem', tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+      encoding: 'terrarium', tileSize: 256, maxzoom: 14, attribution: 'Terrain: Mapzen / AWS Open Data'});
+    map.setTerrain({source: 'dem', exaggeration: 1.6});
+    if (map.setSky) map.setSky({'sky-color': '#9ec9ff', 'horizon-color': '#ffd6e7', 'fog-color': '#ffffff', 'sky-horizon-blend': 0.6, 'horizon-fog-blend': 0.6});
+    map.addSource('route', {type: 'geojson', data: {type: 'FeatureCollection', features: LINES.map(function (l) {
+      return {type: 'Feature', properties: {color: l.color, dash: l.dash ? 1 : 0}, geometry: {type: 'LineString', coordinates: l.path}};
+    })}});
+    map.addLayer({id: 'route-glow', type: 'line', source: 'route', paint: {'line-color': ['get', 'color'], 'line-width': 10, 'line-opacity': 0.25, 'line-blur': 4}});
+    map.addLayer({id: 'route', type: 'line', source: 'route', layout: {'line-cap': 'round', 'line-join': 'round'},
+      paint: {'line-color': ['get', 'color'], 'line-width': 3.5}});
+  });
+  STOPS.forEach(function (s, k) {
+    var el = document.createElement('button');
+    el.type = 'button'; el.className = 'pin ' + s.cls; el.innerHTML = '<img src="' + s.img + '" alt=""><b>' + (k + 1) + '</b>';
+    el.setAttribute('aria-label', s.name);
+    el.addEventListener('click', function () { stop(); select(k); });
+    new maplibregl.Marker({element: el, anchor: 'bottom'}).setLngLat([s.lng, s.lat]).addTo(map);
+  });
+})();
+</script>
+</body>
+</html>

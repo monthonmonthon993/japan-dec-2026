@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Japan Dec 2026 — Presentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@500;600;700&family=Noto+Sans+Thai:wght@400;500;600&display=swap">
+<style>
+/* Layout: one full-viewport slide at a time; photo slides get a gradient wash, text slides sit on a deep gradient. */
+:root {
+  --ink: #ffffff;
+  --soft: rgba(255, 255, 255, .78);
+  --deep: #12142b;
+  --g-tk: linear-gradient(135deg, #6366f1, #06b6d4);
+  --g-ks: linear-gradient(135deg, #f43f5e, #f59e0b);
+  --g-sh: linear-gradient(135deg, #10b981, #3b82f6);
+  --g-ks2: linear-gradient(135deg, #d946ef, #f97316);
+  --g-brand: linear-gradient(120deg, #6366f1 0%, #d946ef 50%, #f97316 100%);
+  --font-display: "Bai Jamjuree", "Noto Sans Thai", system-ui, sans-serif;
+  --font-body: "Noto Sans Thai", system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--deep); color: var(--ink); font-family: var(--font-body); overflow: hidden; }
+img { max-width: 100%; display: block; }
+h1, h2 { font-family: var(--font-display); line-height: 1.15; margin: 0; text-wrap: balance; }
+h1 { font-size: clamp(2.6rem, 7vw, 5.6rem); }
+h2 { font-size: clamp(1.8rem, 4.2vw, 3.4rem); margin-bottom: .5em; }
+h2.huge { font-size: clamp(2.6rem, 8vw, 6rem); }
+.grad { background: linear-gradient(120deg, #fde68a, #fbcfe8, #a5f3fc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.eyebrow { margin: 0 0 10px; font-size: clamp(.8rem, 1.4vw, 1rem); letter-spacing: .1em; text-transform: uppercase; color: var(--soft); font-weight: 600; }
+.lead { font-size: clamp(1rem, 2vw, 1.4rem); color: var(--soft); margin: 18px 0 0; }
+
+#stage { position: fixed; inset: 0; }
+.slide { position: absolute; inset: 0; display: flex; align-items: center; opacity: 0; visibility: hidden; transition: opacity .45s ease, visibility .45s;
+  background: radial-gradient(70vw 60vw at 10% 10%, rgba(99, 102, 241, .45), transparent 60%),
+              radial-gradient(60vw 60vw at 100% 100%, rgba(217, 70, 239, .35), transparent 60%), var(--deep); }
+.slide.on { opacity: 1; visibility: visible; }
+.slide.grad-bg { background: radial-gradient(70vw 60vw at 90% 0%, rgba(244, 63, 94, .45), transparent 60%),
+                             radial-gradient(60vw 60vw at 0% 100%, rgba(6, 182, 212, .4), transparent 60%), var(--deep); }
+.sl-in { position: relative; z-index: 2; width: 100%; max-width: 1200px; margin: 0 auto; max-height: 100%; overflow: auto;
+  padding: max(48px, env(safe-area-inset-top, 0px)) max(6vw, env(safe-area-inset-right, 0px)) 72px max(6vw, env(safe-area-inset-left, 0px)); }
+.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.slide.dark::after { content: ""; position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(160deg, rgba(79, 70, 229, .6), rgba(217, 70, 239, .3) 50%, rgba(18, 20, 43, .85)); }
+.slide.phase.tk::after { background: linear-gradient(160deg, rgba(99, 102, 241, .75), rgba(6, 182, 212, .35) 60%, rgba(18, 20, 43, .7)); }
+.slide.phase.ks::after { background: linear-gradient(160deg, rgba(244, 63, 94, .7), rgba(245, 158, 11, .3) 60%, rgba(18, 20, 43, .7)); }
+.slide.phase.sh::after { background: linear-gradient(160deg, rgba(16, 185, 129, .7), rgba(59, 130, 246, .35) 60%, rgba(18, 20, 43, .7)); }
+.slide.phase.ks2::after { background: linear-gradient(160deg, rgba(217, 70, 239, .7), rgba(249, 115, 22, .3) 60%, rgba(18, 20, 43, .7)); }
+.slide.on .sl-in > * { animation: up .6s both; }
+.slide.on .sl-in > *:nth-child(2) { animation-delay: .08s; } .slide.on .sl-in > *:nth-child(3) { animation-delay: .16s; }
+.slide.on .sl-in > *:nth-child(4) { animation-delay: .24s; } .slide.on .sl-in > *:nth-child(5) { animation-delay: .32s; }
+@keyframes up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+.count { margin-top: 28px; display: inline-block; padding: 10px 22px; border-radius: 999px; background: rgba(255, 255, 255, .16); border: 1px solid rgba(255, 255, 255, .4); font-size: 1.2rem; }
+.count b { font-family: var(--font-display); font-size: 1.6rem; }
+
+/* day slide: photo half + text half */
+.slide.day .half { position: absolute; left: 0; top: 0; bottom: 0; width: 46%; height: 100%; object-fit: cover; z-index: 1; }
+.slide.day .half.blank { display: grid; place-items: center; font-size: 6rem; }
+.slide.day.tk .half.blank { background: var(--g-tk); } .slide.day.ks2 .half.blank { background: var(--g-ks2); }
+.slide.day .sl-in { margin-left: 46%; width: 54%; padding-left: 5vw; }
+.slide.day .half::after { content: ""; }
+.slide.day::before { content: ""; position: absolute; left: 46%; top: 0; bottom: 0; width: 6px; z-index: 2; }
+.slide.day.tk::before { background: var(--g-tk); } .slide.day.ks::before { background: var(--g-ks); }
+.slide.day.sh::before { background: var(--g-sh); } .slide.day.ks2::before { background: var(--g-ks2); }
+.loc { color: var(--soft); margin: -8px 0 22px; font-size: clamp(.9rem, 1.6vw, 1.1rem); }
+.hl { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; font-size: clamp(1rem, 1.9vw, 1.35rem); }
+.hl li { display: grid; grid-template-columns: 2em 4em 1fr; gap: 8px; align-items: baseline; }
+.hl .tm { color: var(--soft); font-variant-numeric: tabular-nums; font-size: .85em; }
+.stay { margin-top: 24px; color: var(--soft); font-size: clamp(.9rem, 1.6vw, 1.1rem); }
+
+/* stops grid */
+.stopgrid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+.stopgrid li { position: relative; border-radius: 18px; overflow: hidden; aspect-ratio: 4 / 3; display: flex; flex-direction: column; justify-content: flex-end; padding: 10px 12px; }
+.stopgrid img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
+.stopgrid li::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 35%, rgba(18, 20, 43, .85)); z-index: 1; }
+.stopgrid li > :not(img) { position: relative; z-index: 2; }
+.stopgrid b { position: absolute !important; top: 8px; left: 8px; min-width: 26px; height: 26px; border-radius: 999px; display: grid; place-items: center; font-size: .85rem; }
+.stopgrid .tk b { background: var(--g-tk); } .stopgrid .ks b { background: var(--g-ks); } .stopgrid .sh b { background: var(--g-sh); } .stopgrid .ks2 b { background: var(--g-ks2); }
+.stopgrid span { font-weight: 600; line-height: 1.25; }
+.stopgrid small { color: var(--soft); }
+
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.cards { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.cards li { background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .18); border-radius: 18px; padding: 14px 18px; display: grid; gap: 2px; }
+.cards b { font-family: var(--font-display); font-size: 1.15rem; }
+.cards small { color: var(--soft); }
+.timeline { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; font-size: clamp(1rem, 2vw, 1.4rem); }
+.timeline li { display: grid; grid-template-columns: 5.5em 4.5em 1fr; gap: 10px; align-items: baseline; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, .15); }
+.timeline b { font-family: var(--font-display); background: var(--g-brand); -webkit-background-clip: text; background-clip: text; color: transparent; filter: brightness(1.4); }
+.timeline .tm { color: var(--soft); font-variant-numeric: tabular-nums; }
+.bar { height: 12px; border-radius: 999px; background: rgba(255, 255, 255, .15); overflow: hidden; margin-bottom: 22px; }
+.bar i { display: block; height: 100%; background: var(--g-sh); border-radius: inherit; }
+.check { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 28px; font-size: clamp(.95rem, 1.6vw, 1.15rem); }
+.check li { display: grid; grid-template-columns: 26px 1fr; gap: 10px; align-items: start; }
+.check .box { width: 22px; height: 22px; border-radius: 7px; border: 2px solid rgba(255, 255, 255, .6); margin-top: 3px; }
+.check li.hi .box { border-color: #fb7185; box-shadow: 0 0 12px rgba(251, 113, 133, .6); }
+.qs { margin: 0; padding-left: 1.3em; display: grid; gap: 18px; font-size: clamp(1.1rem, 2.2vw, 1.6rem); }
+.tips { margin: 0; padding-left: 1.2em; display: grid; gap: 12px; font-size: clamp(1rem, 1.8vw, 1.25rem); max-width: 60ch; }
+
+.pctl { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 10;
+  display: flex; align-items: center; gap: 10px; background: rgba(18, 20, 43, .55); backdrop-filter: blur(10px); padding: 6px 10px; border-radius: 999px; font-size: .9rem; }
+.pctl a, .pctl button { color: #fff; text-decoration: none; background: none; border: 0; font: inherit; font-size: 1.05rem; cursor: pointer; padding: 4px 8px; border-radius: 999px; }
+.pctl a:hover, .pctl button:hover { background: rgba(255, 255, 255, .15); }
+#pcount { font-variant-numeric: tabular-nums; color: var(--soft); }
+.pprog { position: fixed; left: 0; right: 0; bottom: 0; height: 4px; z-index: 10; background: rgba(255, 255, 255, .1); }
+.pprog i { display: block; height: 100%; width: 0; background: var(--g-brand); transition: width .35s; }
+:focus-visible { outline: 3px solid #a5b4fc; outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) { .slide, .slide.on .sl-in > *, .pprog i { transition: none; animation: none !important; } }
+@media (max-width: 760px), (orientation: portrait) {
+  .slide.day .half { width: 100%; height: 38%; bottom: auto; }
+  .slide.day::before { left: 0; right: 0; top: 38%; bottom: auto; width: auto; height: 5px; }
+  .slide.day { align-items: flex-end; }
+  .slide.day .sl-in { margin-left: 0; width: 100%; max-height: 62%; padding-top: 24px; }
+  .cols, .check { grid-template-columns: 1fr; }
+  .timeline li { grid-template-columns: 4.8em 4em 1fr; }
+}
+
+/* budget slide */
+.money { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 22px; }
+.money div { background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .18); border-radius: 18px; padding: 14px 18px; display: grid; }
+.money b { font-family: var(--font-display); font-size: clamp(1.5rem, 3.4vw, 2.6rem); font-variant-numeric: tabular-nums; }
+.money span { color: var(--soft); font-size: .9rem; }
+.blist { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 2px 28px; font-size: clamp(.9rem, 1.5vw, 1.1rem); }
+.blist li { display: grid; grid-template-columns: 1fr auto; gap: 0 10px; padding: 6px 0; border-bottom: 1px solid rgba(255, 255, 255, .12); }
+.blist b { font-variant-numeric: tabular-nums; text-align: right; }
+.blist small { grid-column: 2; text-align: right; color: var(--soft); font-variant-numeric: tabular-nums; }
+.blist li.paid span::after { content: " ✓"; color: #6ee7b7; }
+@media (max-width: 760px), (orientation: portrait) { .money, .blist { grid-template-columns: 1fr; } }
+
+/* plan comparison slide */
+.plancmp { list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
+.plancmp li { display: grid; grid-template-columns: 56px 1fr auto; gap: 16px; align-items: center; background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .15); border-radius: 18px; padding: 14px 18px; }
+.plancmp li > b { width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; font-family: var(--font-display); font-size: 1.5rem; }
+.plancmp .tk > b, .plancmp .tk .pb i { background: var(--g-tk); } .plancmp .sh > b, .plancmp .sh .pb i { background: var(--g-sh); } .plancmp .ks > b, .plancmp .ks .pb i { background: var(--g-ks); }
+.plancmp span { font-family: var(--font-display); font-size: clamp(1.1rem, 2vw, 1.5rem); }
+.plancmp small { display: block; color: var(--soft); font-size: .85rem; }
+.plancmp .pb { height: 8px; border-radius: 999px; background: rgba(255, 255, 255, .12); margin-top: 8px; overflow: hidden; }
+.plancmp .pb i { display: block; height: 100%; }
+.plancmp em { font-style: normal; text-align: right; font-family: var(--font-display); font-size: clamp(1.3rem, 2.6vw, 2rem); font-variant-numeric: tabular-nums; }
+.lead.small { font-size: clamp(.9rem, 1.5vw, 1.1rem); }
+</style>
+</head>
+<body>
+<main id="stage">
+<section class="slide cover dark"><img class="bg" src="img/fuji.jpg" alt="" loading="lazy" decoding="async"><div class="sl-in">
+  <p class="eyebrow">ทริปครอบครัว Sangsinsup</p>
+  <h1>ญี่ปุ่น<br><span class="grad">1–11 ธันวาคม</span> 2026</h1>
+  <p class="lead">Tokyo · Mt. Fuji · Kyoto · Nara · Takayama · Shirakawa-go · Osaka</p>
+  <p class="count">อีก <b id="countdown">—</b> วัน</p></div></section><section class="slide grad-bg"><div class="sl-in"><p class="eyebrow">8 คืน · 11 จุดหลัก</p><h2>เส้นทางทั้งหมด</h2><ol class="stopgrid"><li class="tk"><img class="" src="img/ueno.jpg" alt="" loading="lazy" decoding="async"><b>1</b><span>Ueno · Ameyoko</span><small>Day 2</small></li><li class="tk"><img class="" src="img/chureito.jpg" alt="" loading="lazy" decoding="async"><b>2</b><span>Mt. Fuji · Chureito</span><small>Day 3</small></li><li class="tk"><img class="" src="img/tsukiji.jpg" alt="" loading="lazy" decoding="async"><b>3</b><span>Tsukiji Outer Market</span><small>Day 4</small></li><li class="ks"><img class="" src="img/inari.jpg" alt="" loading="lazy" decoding="async"><b>4</b><span>Kyoto · Fushimi Inari</span><small>Day 5</small></li><li class="ks"><img class="" src="img/nara.jpg" alt="" loading="lazy" decoding="async"><b>5</b><span>Nara Park</span><small>Day 6</small></li><li class="ks"><img class="" src="img/katsuoji.jpg" alt="" loading="lazy" decoding="async"><b>6</b><span>Katsuo-ji</span><small>Day 6</small></li><li class="sh"><img class="" src="img/takayama.jpg" alt="" loading="lazy" decoding="async"><b>7</b><span>Takayama</span><small>Day 7</small></li><li class="sh"><img class="" src="img/shirakawago.jpg" alt="" loading="lazy" decoding="async"><b>8</b><span>Shirakawa-go</span><small>Day 7</small></li><li class="sh"><img class="" src="img/shinhotaka.jpg" alt="" loading="lazy" decoding="async"><b>9</b><span>Shinhotaka Ropeway</span><small>Day 8</small></li><li class="ks2"><img class="" src="img/dotonbori.jpg" alt="" loading="lazy" decoding="async"><b>10</b><span>Osaka · Dotonbori</span><small>Day 9</small></li><li class="ks2"><img class="" src="img/kuromon.jpg" alt="" loading="lazy" decoding="async"><b>11</b><span>Kuromon → KIX</span><small>Day 10</small></li></ol></div></section><section class="slide "><div class="sl-in"><p class="eyebrow">จองแล้ว ✓</p><h2>เครื่องบิน · ที่พัก · รถ</h2><div class="cols"><ul class="cards"><li><b>ขาไป XJ600</b><span>อ. 1 ธ.ค. 23:50 DMK T1 → พ. 2 ธ.ค. 08:00 NRT T2</span></li><li><b>ขากลับ (เปลี่ยนแล้ว) XJ611</b><span>พฤ. 10 ธ.ค. 19:45 KIX T1 → ศ. 11 ธ.ค. 00:15 DMK T1</span></li></ul><ul class="cards"><li><b>Tokyo</b><span>MONday Apart Premium Ueno</span><small>2–4 ธ.ค. · 2 คืน · เช็คอิน 15:00</small></li><li><b>Osaka</b><span>ESLEAD HOTEL Osaka Ebisu</span><small>4–10 ธ.ค. · 6 คืน · เช็คอิน หลัง 16:00</small></li><li><b>Takayama</b><span>Takayama Ouan Hotel</span><small>7–8 ธ.ค. · 1 คืน · เช็คอิน 15:00</small></li><li><b>🚗 รถเช่า</b><span>รถเช่า Toyota Rent a Car (สาขา Ueno)</span><small>พฤ. 3 ธ.ค. · รับ 08:00 · คืนก่อน 20:00</small></li></ul></div></div></section><section class="slide grad-bg"><div class="sl-in"><p class="eyebrow">¥100 ≈ ฿21 · ประมาณการ</p><h2>งบประมาณ</h2>
+  <div class="money"><div><b>฿233,067</b><span>รวม 4 คน · ¥1,109,841</span></div><div><b>฿58,267</b><span>ต่อคน · ¥277,460</span></div>
+  <div><b>฿97,646</b><span>จ่ายแล้ว</span></div></div>
+  <ul class="blist"><li class="paid"><span>✈ เที่ยวบิน</span><b>฿81,885</b><small>¥389,927</small></li><li class="paid"><span>🏨 ที่พัก · MONday Apart Premium Ueno</span><b>฿15,761</b><small>¥75,052</small></li><li class="booked"><span>🏨 ที่พัก · ESLEAD Osaka Ebisu</span><b>฿17,618</b><small>¥83,897</small></li><li class="booked"><span>🏨 ที่พัก · Takayama Ouan</span><b>฿8,048</b><small>¥38,325</small></li><li class="est"><span>🚄 เดินทางระหว่างเมือง</span><b>฿47,468</b><small>¥226,040</small></li><li class="booked"><span>🚗 รถเช่าวันฟูจิ · Toyota C2 1 วัน รวมประกันเต็ม</span><b>฿3,101</b><small>¥14,767</small></li><li class="est"><span>🚗 รถเช่าวันฟูจิ · ทางด่วน (ETC) + น้ำมัน</span><b>฿2,205</b><small>¥10,500</small></li><li class="est"><span>🚇 รถในเมือง</span><b>฿10,080</b><small>¥48,000</small></li><li class="est"><span>🍜 อาหาร</span><b>฿37,800</b><small>¥180,000</small></li><li class="est"><span>🎟 ค่าเข้าชม</span><b>฿2,100</b><small>¥10,000</small></li><li class="est"><span>🛡 ประกัน + eSIM</span><b>฿7,000</b><small>¥33,333</small></li></ul></div></section><section class="slide phase dark tk"><img class="bg" src="img/chureito.jpg" alt="" loading="lazy" decoding="async"><div class="sl-in"><p class="eyebrow">1–4 ธ.ค. · 2 คืน</p><h2 class="huge">Tokyo</h2>
+  <p class="lead">พักที่ MONday Apart Premium Ueno</p></div></section><section class="slide day tk"><div class="half blank">✈</div><div class="sl-in">
+  <p class="eyebrow">Day 1 · อ. 1 ธ.ค.</p>
+  <h2>ออกเดินทางจากกรุงเทพ</h2>
+  <p class="loc">Bangkok DMK T1</p>
+  <ul class="hl"><li><span class="ic">🚆</span><span class="tm">20:50</span><span>ถึง DMK T1 · เช็คอินสัมภาระ</span></li><li><span class="ic">🚆</span><span class="tm">23:50</span><span>XJ600 ออกเดินทาง → Tokyo Narita</span></li></ul>
+  <p class="stay">🛏 บนเครื่อง</p>
+</div></section><section class="slide day tk"><img class="half" src="img/ueno.jpg" alt="" loading="lazy" decoding="async"><div class="sl-in">
+  <p class="eyebrow">Day 2 · พ. 2 ธ.ค.</p>
+  <h2>แลนดิ้งนาริตะ → โตเกียว &amp; ย่านอุเอโนะ</h2>
+  <p class="loc">NRT T2 → Ueno</p>
+  <ul class="hl"><li><span class="ic">🚆</span><span class="tm">08:00</span><span>ถึง NRT T2 · ตม. + รับกระเป๋า</span></li><li><span class="ic">🚆</span><span class="tm">09:30</span><span>Keisei Skyliner → Keisei-Ueno</span></li><li><span class="ic">🍜</span><span class="tm">11:30</span><span>มื้อเที่ยงย่าน Ueno → เดินเล่น Ueno Park</span></li><li><span class="ic">📍</span><span class="tm">17:00</span><span>Ameyoko Market + ซื้อของกันหนาวย่าน Okachimachi</span></li></ul>
+  <p class="stay">🛏 MONday Apart Premium Ueno</p>
+</div></section><section class="slide day tk"><img class="half" src="img/chureito.jpg" alt="" loading="lazy" decoding="async"><div class="sl-in">
+  <p class="eyebrow">Day 3 · พฤ. 3 ธ.ค.</p>
+  <h2>ขับรถเที่ยวเอง · ภูเขาไฟฟูจิ &amp; คาวากุจิโกะ</h2>
+  <p class="loc">Ueno → Kawaguchiko → Ueno · ~120 กม. ต่อทาง</p>
+  <ul class="hl"><li><span class="ic">📍</span><span class="tm">10:20</span><span>Chureito Pagoda (เจดีย์แดง)</span></li><li><span class="ic">📍</span><span class="tm">12:00</span><span>Oishi Park (สวนโออิชิ) ริมทะเลสาบ Kawaguchiko</span></li><li><span class="ic">🍜</span><span class="tm">13:00</span><span>มื้อเที่ยง Hoto Fudou สาขา Higashikoiji</span></li><li><span class="ic">📍</span><span class="tm">14:30</span><span>Oshino Hakkai (หมู่บ้านน้ำใส)</span></li></ul>
+  <p class="stay">🛏 MONday Apart Premium Ueno</p>
+</div></section><section class="slide day tk"><img class="half" src="img/tsukiji.jpg" alt="" loading="lazy" decoding="async"><div class="sl-in">
+  <p class="eyebrow">Day 4 · ศ. 4 ธ.ค.</p>
+  <h2>ตลาดปลาซึคิจิ → ชินคันเซ็น → โอซาก้า (Pokémon Center)</h2>
+  <p class="loc">Tokyo → Shin-Osaka → Ebisucho → Umeda</p>
+  <ul class="hl"><li><span class="ic">🚆</span><span class="tm">07:30</span><span>เช็คเอาท์ MONday · ฝากกระเป๋าทั้งหมดที่ล็อบบี้</span></li><li><span class="ic">🍜</span><span class="tm">08:00</span><span>Hibiya Line: Ueno → Tsukiji · ตลาดปลา Tsukiji Outer Market</span></li><li><span class="ic">🚆</span><span class="tm">10:30</span><span>กลับโรงแรม Ueno รับกระเป๋า</span></li><li><span class="ic">📍</span><span class="tm">16:00</span><span>Umeda: Pokémon Center Osaka (Daimaru Umeda ชั้น 13) + ช็อป On ที่ Hankyu Umeda</span></li></ul>
+  <p class="stay">🛏 ESLEAD Hotel Osaka Ebisu</p>
+</div></section><section class="slide phase dark ks"><img class="bg" src="img/inari.jpg" alt="" loading="lazy" decoding="async"><div class="sl-in"><p class="eyebrow">4–6 ธ.ค.</p><h2 class="huge">Kansai</h2>
+  <p class="lead">พักที่ ESLEAD Hotel Osaka Ebisu</p></div></section><section class="slide day ks"><img class="half" src="img/inari.jpg" alt="" loading="lazy" decoding="async"><div class="sl-in">
+  <p class="eyebrow">Day 5 · ส. 5 ธ.ค.</p>
+  <h2>เดย์ทริปเกียวโต ⛩ เมืองเก่าและวัฒนธรรม</h2>
+  <p class="loc">Osaka → Kyoto → Osaka</p>
+  <ul class="hl"><li><span class="ic">📍</span><span class="tm">09:00</span><span>Fushimi Inari Shrine (ศาลเจ้าฟุชิมิอินาริ)</span></li><li><span class="ic">🍜</span><span class="tm">12:00</span><span>มื้อเที่ยงเซ็ตอาหารญี่ปุ่นสไตล์เกียวโต</span></li><li><span class="ic">📍</span><span class="tm">13:30</span><span>Kiyomizu-dera (วัดน้ำใส) → Ninenzaka &amp; Sannenzaka</span></li><li><span class="ic">📍</span><span class="tm">17:00</span><span>เดินเล่นย่านเมืองเก่า Gion</span></li></ul>
+  <p class="stay">🛏 ESLEAD Hotel Osaka Ebisu</p>
+</div></section><section class="slide day ks"><img class="half" src="img/nara.jpg" alt="" loading="lazy" decoding="async"><div class="sl-in">
+  <p class="eyebrow">Day 6 · อา. 6 ธ.ค.</p>
+  <h2>ทักทายกวางนารา 🦌 → ขอพรดารุมะที่วัด Katsuo-ji</h2>
+  <p class="loc">Osaka → Nara → Osaka → Minoh (Katsuo-ji) → Shinsekai</p>
+  <ul class="hl"><li><span class="ic">📍</span><span class="tm">09:15</span><span>Nara Park (สวนกวาง) + Todai-ji (วัดโทไดจิ)</span></li><li><span class="ic">🍜</span><span class="tm">12:00</span><span>นั่งรถไฟกลับ Osaka · มื้อเที่ยงจานด่วน</span></li><li><span class="ic">📍</span><span class="tm">14:30</span><span>วัด Katsuo-ji (วัดดารุมะแห่งชัยชนะ)</span></li><li><span class="ic">🍜</span><span class="tm">17:30</span><span>กลับถึงย่าน Shinsekai ข้างโรงแรม · Kushikatsu (ของทอดเสียบไม้)</span></li></ul>
+  <p class="stay">🛏 ESLEAD Hotel Osaka Ebisu</p>
+</div></section><section class="slide phase dark sh"><img class="bg" src="img/shirakawago.jpg" alt="" loading="lazy" decoding="async"><div class="sl-in"><p class="eyebrow">7–8 ธ.ค. · 1 คืน</p><h2 class="huge">Takayama · Shirakawago · Shinhotaka</h2>
+  <p class="lead">พักที่ Takayama Ouan Hotel</p></div></section><section class="slide day sh"><img class="half" src="img/shirakawago.jpg" alt="" loading="lazy" decoding="async"><div class="sl-in">
+  <p class="eyebrow">Day 7 · จ. 7 ธ.ค.</p>
+  <h2>โอซาก้า → ทาคายาม่า → ชิราคาวาโกะ ❄ → เนื้อฮิดะ</h2>
+  <p class="loc">Shin-Osaka → Nagoya → Takayama → Shirakawago → Takayama</p>
+  <ul class="hl"><li><span class="ic">🚆</span><span class="tm">06:45</span><span>ออกจากโรงแรม Ebisu → Shin-Osaka</span></li><li><span class="ic">🍜</span><span class="tm">11:30</span><span>มื้อเที่ยงง่ายๆ รอบสถานี</span></li><li><span class="ic">📍</span><span class="tm">13:40</span><span>เดินชมหมู่บ้านมรดกโลก Shirakawa-go ~2.5–3 ชม.</span></li><li><span class="ic">🍜</span><span class="tm">19:00</span><span>มื้อค่ำปิ้งย่างเนื้อฮิดะพรีเมียม (Hida Beef)</span></li></ul>
+  <p class="stay">🛏 Takayama Ouan Hotel</p>
+</div></section><section class="slide day sh"><img class="half" src="img/shinhotaka.jpg" alt="" loading="lazy" decoding="async"><div class="sl-in">
+  <p class="eyebrow">Day 8 · อ. 8 ธ.ค.</p>
+  <h2>กระเช้า Shinhotaka 🚠 → กลับโอซาก้า</h2>
+  <p class="loc">Takayama → Shinhotaka Ropeway → Takayama → Nagoya → Osaka</p>
+  <ul class="hl"><li><span class="ic">🍜</span><span class="tm">06:45</span><span>อาหารเช้าแถวสถานี Takayama</span></li><li><span class="ic">🚆</span><span class="tm">07:40</span><span>เช็คเอาท์ ฝากเป้ไว้ที่โรงแรม · Nohi Bus สาย Okuhida → Shinhotaka Ropeway</span></li><li><span class="ic">📍</span><span class="tm">09:00</span><span>ขึ้นกระเช้าลอยฟ้า 2 ชั้น · ยอดเขาหิมะ 360 องศา</span></li><li><span class="ic">🍜</span><span class="tm">13:35</span><span>รับเป้ที่โรงแรม · หาอะไรกินเร็วๆ / ซื้อขึ้นรถไฟ</span></li></ul>
+  <p class="stay">🛏 ESLEAD Hotel Osaka Ebisu</p>
+</div></section><section class="slide phase dark ks2"><img class="bg" src="img/dotonbori.jpg" alt="" loading="lazy" decoding="async"><div class="sl-in"><p class="eyebrow">9–11 ธ.ค.</p><h2 class="huge">Osaka ช้อปปิ้ง &amp; กลับบ้าน</h2>
+  <p class="lead">พักที่ ESLEAD Hotel Osaka Ebisu</p></div></section><section class="slide day ks2"><img class="half" src="img/dotonbori.jpg" alt="" loading="lazy" decoding="async"><div class="sl-in">
+  <p class="eyebrow">Day 9 · พ. 9 ธ.ค.</p>
+  <h2>วันช้อปปิ้งใหญ่ในโอซาก้า 🛍 &amp; กวาดรองเท้า On Cloud</h2>
+  <p class="loc">Shinsaibashi · Dotonbori · Namba</p>
+  <ul class="hl"><li><span class="ic">📍</span><span class="tm">10:00</span><span>ย่านช้อปปิ้ง Shinsaibashi และ Dotonbori</span></li><li><span class="ic">📍</span><span class="tm">11:00</span><span>ล่ารองเท้า On (On Cloud)</span></li><li><span class="ic">📍</span><span class="tm">13:00</span><span>ช่วงบ่าย: เครื่องสำอาง สกินแคร์ ยาสามัญ</span></li><li><span class="ic">🍜</span><span class="tm">18:00</span><span>ถ่ายรูปป้ายไฟ Glico ริมคลอง Dotonbori · มื้อค่ำ</span></li></ul>
+  <p class="stay">🛏 ESLEAD Hotel Osaka Ebisu</p>
+</div></section><section class="slide day ks2"><img class="half" src="img/kuromon.jpg" alt="" loading="lazy" decoding="async"><div class="sl-in">
+  <p class="eyebrow">Day 10 · พฤ. 10 ธ.ค.</p>
+  <h2>ตลาดคุโรมง → สนามบินคันไซ → บินกลับไทย ✈ 19:45</h2>
+  <p class="loc">Osaka → KIX T1</p>
+  <ul class="hl"><li><span class="ic">🚆</span><span class="tm">08:30</span><span>เช็คเอาท์ · ฝากกระเป๋าทั้งหมดที่ล็อบบี้โรงแรม</span></li><li><span class="ic">🍜</span><span class="tm">09:00</span><span>ตลาดคุโรมง (Kuromon Ichiba Market)</span></li><li><span class="ic">📍</span><span class="tm">12:00</span><span>เก็บตกช้อปปิ้งย่าน Namba · มื้อเที่ยงปิดท้ายทริป</span></li><li><span class="ic">📍</span><span class="tm">17:00</span><span>ช้อป Duty Free ด้านใน</span></li></ul>
+  <p class="stay">🛏 บนเครื่อง</p>
+</div></section><section class="slide day ks2"><div class="half blank">✈</div><div class="sl-in">
+  <p class="eyebrow">Day 11 · ศ. 11 ธ.ค.</p>
+  <h2>ถึงกรุงเทพฯ</h2>
+  <p class="loc">Bangkok DMK T1</p>
+  <ul class="hl"><li><span class="ic">🚆</span><span class="tm">00:15</span><span>ถึง DMK T1</span></li></ul>
+  <p class="stay">🛏 บ้าน</p>
+</div></section><section class="slide grad-bg"><div class="sl-in"><p class="eyebrow">ตั้งปลุก · เวลาไทย</p><h2>วันสำคัญก่อนเดินทาง</h2><ol class="timeline"><li><b>4 พ.ย.</b><span class="tm">08:00</span><span>Shinkansen ที่นั่งเปิด (smartEX)</span></li><li><b>7 พ.ย.</b><span class="tm">~06:00</span><span>Nohi Bus ไป Shirakawago</span></li><li><b>7 พ.ย.</b><span class="tm">08:00</span><span>JR Hida 3 ขาไป Takayama + Shinkansen → Nagoya</span></li><li><b>8 พ.ย.</b><span class="tm">08:00</span><span>JR Hida 14 ขากลับ + Shinkansen Nagoya → Osaka</span></li><li><b>29 พ.ย.</b><span class="tm"></span><span>Agoda ตัดบัตร ESLEAD Ebisu</span></li><li><b>30 พ.ย.</b><span class="tm"></span><span>วันสุดท้ายยกเลิกโรงแรมฟรี</span></li></ol></div></section><section class="slide "><div class="sl-in"><p class="eyebrow">เสร็จแล้ว 5 จาก 20</p><h2>ยังต้องทำ</h2>
+  <div class="bar"><i style="width:25%"></i></div><ul class="check"><li class="hi"><span class="box"></span>สมัคร account + ผูกบัตรเครดิต smartEX และ Japan Bus Online</li><li class="hi"><span class="box"></span>ยืนยันยาง studless กับ Toyota สาขา Ueno Station</li><li class="hi"><span class="box"></span>ลงทะเบียน Visit Japan Web ทุกคน (ตม. + ศุลกากร)</li><li class="hi"><span class="box"></span>ใบขับขี่สากล (แบบเจนีวา 1949)</li><li class="hi"><span class="box"></span>ยืนยันว่า booking Ebisu เดิม (4 คืน 5–8 ธ.ค.) ยกเลิกแล้ว</li><li class="hi"><span class="box"></span>จอง Shinkansen 3 ขาใน smartEX</li><li class="hi"><span class="box"></span>จอง JR Hida 3 (Nagoya 08:43 → Takayama) + Nohi Bus Shirakawago ไป-กลับ</li><li class="hi"><span class="box"></span>จอง JR Hida 14 (Takayama 14:46 → Nagoya)</li><li class=""><span class="box"></span>เพิ่ม Suica ใน Apple Wallet ทุกคน + เติมเงิน</li><li class=""><span class="box"></span>Agoda ตัดบัตรค่า ESLEAD Ebisu ¥83,897</li><li class=""><span class="box"></span>ซื้อประกันเดินทาง 4 คน · คุ้มครอง 1–11 ธ.ค.</li><li class=""><span class="box"></span>ตรวจ passport ทุกคน · ต้องเหลือ &gt;6 เดือน (หมดหลัง มิ.ย. 2027)</li><li class=""><span class="box"></span>สั่ง eSIM 4 ซิม ~9–10 วัน</li><li class=""><span class="box"></span>แลกเงินสด ¥ + เติม YouTrip</li><li class=""><span class="box"></span>เสื้อหนาว + รองเท้ากันลื่น</li></ul></div></section><section class="slide grad-bg"><div class="sl-in"><p class="eyebrow">ค่าเดินทางต่อคน · ตัดสินใจวันนี้</p><h2>เทียบแผน: เดิม · JR Pass · Optimize</h2>
+  <ol class="plancmp"><li class="tk"><b>A</b><div><span>แผนเดิม</span><small>ตั๋วแยก + รถเช่าจาก Ueno</small><div class="pb"><i style="width:86%"></i></div></div><em>¥62,827<small>฿13,194 / คน · ⏱ 20 ชม. 33 นาที · 🔁 4</small></em></li><li class="sh"><b>B</b><div><span>JR Pass</span><small>JR Pass 7 วัน (2–8 ธ.ค.) + รถไฟไปฟูจิ + เช่ารถที่ Kawaguchiko</small><div class="pb"><i style="width:100%"></i></div></div><em>¥72,710<small>฿15,269 / คน · ⏱ 22 ชม. 8 นาที · 🔁 7</small></em></li><li class="ks"><b>C</b><div><span>แผนใหม่ (optimize) ⭐</span><small>ช่วงโตเกียวเหมือนเดิม + Takayama-Hokuriku Pass 5 วัน (6–10 ธ.ค.)</small><div class="pb"><i style="width:79%"></i></div></div><em>¥57,097<small>฿11,990 / คน · ⏱ 21 ชม. 19 นาที · 🔁 4</small></em></li></ol><p class="lead small">ถ้าที่บ้านไม่อยากขับรถออกจากโตเกียว: ใช้แผน C แต่ไปฟูจิด้วย Fuji Excursion (~¥8,260/คน ไป-กลับ) + เช่ารถที่ Kawaguchiko → ค่าใช้จ่ายรวมใกล้เคียงแผนเดิม</p></div></section><section class="slide grad-bg"><div class="sl-in"><p class="eyebrow">วันนี้</p><h2>ต้องตัดสินใจ</h2><ol class="qs"><li>booking Ebisu เดิม (Triple Family 4 คืน 5–8 ธ.ค. ฿12,448) ยกเลิกแล้วใช่ไหม?</li><li>มณฑลขับรถวันฟูจิ — ใบขับขี่สากลเล่มเดิม (ทริป เม.ย.) ยังไม่หมดอายุใช่ไหม?</li><li>รถบัสไป Shirakawago: รอบ 12:50 ตามแผนแม่ หรือ 11:50 (ได้เวลาเดินเพิ่มก่อนมืด)?</li><li>ประกัน: MSIG เหมือนเดิม หรือแบรนด์อื่น?</li></ol></div></section><section class="slide dark"><img class="bg" src="img/shinhotaka.jpg" alt="" loading="lazy" decoding="async"><div class="sl-in"><p class="eyebrow">Tokyo/Osaka 4–12°C · Takayama −3–5°C · ยอด Shinhotaka −5 ถึง −10°C</p><h2>แต่งตัวยังไง</h2><ul class="tips"><li>แต่งตัวแบบ Layering: ชั้นใน Heattech หนาสุด → ชั้นกลางเสื้อขนฟู/สเวตเตอร์ → ชั้นนอกโค้ทหรือแจ็คเก็ตที่กันลมและกันน้ำ (หิมะละลายแล้วเสื้อชื้นจะหนาวสั่น)</li><li>พกแว่นกันแดดไปกระเช้า Shinhotaka — แดดสะท้อนลานหิมะจ้ามาก</li><li>ไคโระแบบแปะถุงเท้า + แบบใส่กระเป๋าเสื้อ ติดตัววัน Shirakawago / Shinhotaka</li><li>อุณหภูมิ: Tokyo/Osaka 4–12°C · Takayama/Shirakawago −3 ถึง 5°C · ยอด Shinhotaka −5 ถึง −10°C</li></ul></div></section><section class="slide cover dark"><img class="bg" src="img/shirakawago.jpg" alt="" loading="lazy" decoding="async"><div class="sl-in"><h1>เจอกันที่ DMK<br><span class="grad">1 ธ.ค. 20:50</span></h1><p class="lead">XJ600 ออก 23:50 · ถึงสนามบินล่วงหน้า 3 ชม.</p></div></section>
+</main>
+<div class="pctl">
+  <a href="overview.html" title="กลับหน้าแผน (Esc)">✕</a>
+  <span id="pcount"></span>
+  <button id="pfull" type="button" title="เต็มจอ (F)">⛶</button>
+</div>
+<div class="pprog"><i id="pbar"></i></div>
+<script>
+(function () {
+  var el = document.getElementById('countdown'); if (!el) return;
+  var start = new Date('2026-12-01T23:50:00+07:00'), now = new Date();
+  var days = Math.ceil((start - now) / 86400000);
+  el.textContent = days > 0 ? days : '🇯🇵';
+})();
+
+(function () {
+  var slides = [].slice.call(document.querySelectorAll('.slide')), i = 0;
+  var bar = document.getElementById('pbar'), cnt = document.getElementById('pcount');
+  function go(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach(function (s, k) { s.classList.toggle('on', k === i); s.setAttribute('aria-hidden', k !== i); });
+    bar.style.width = ((i + 1) / slides.length * 100) + '%';
+    cnt.textContent = (i + 1) + ' / ' + slides.length;
+    history.replaceState(null, '', '#' + (i + 1));
+  }
+  document.addEventListener('keydown', function (ev) {
+    var k = ev.key;
+    if (k === 'ArrowRight' || k === 'PageDown' || k === ' ' || k === 'Enter') { ev.preventDefault(); go(i + 1); }
+    else if (k === 'ArrowLeft' || k === 'PageUp' || k === 'Backspace') { ev.preventDefault(); go(i - 1); }
+    else if (k === 'Home') go(0); else if (k === 'End') go(slides.length - 1);
+    else if (k === 'f' || k === 'F') full();
+    else if (k === 'Escape' && !document.fullscreenElement) location.href = 'overview.html';
+  });
+  document.getElementById('stage').addEventListener('click', function (ev) {
+    if (ev.target.closest('a,button')) return;
+    go(ev.clientX > innerWidth / 3 ? i + 1 : i - 1);
+  });
+  var x0 = null;
+  addEventListener('touchstart', function (ev) { x0 = ev.touches[0].clientX; }, {passive: true});
+  addEventListener('touchend', function (ev) {
+    if (x0 === null) return; var dx = ev.changedTouches[0].clientX - x0; x0 = null;
+    if (Math.abs(dx) > 40) go(dx < 0 ? i + 1 : i - 1);
+  });
+  function full() {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function () {});
+  }
+  document.getElementById('pfull').addEventListener('click', function (ev) { ev.stopPropagation(); full(); });
+  go((parseInt(location.hash.slice(1), 10) || 1) - 1);
+})();
+</script>
+</body>
+</html>

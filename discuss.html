@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Japan Dec 2026 — เรื่องที่ต้องคุย</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@500;600;700&family=Noto+Sans+Thai:wght@400;500;600&display=swap">
+<style>
+/* Layout: photo hero → 3D map tour (map + stop card) → day picker → bookings / checklist panels.
+   Light snow ground with a soft pastel mesh; each trip phase owns one vivid gradient. */
+:root {
+  --bg: #f7f7fb;
+  --surface: #ffffff;
+  --ink: #171a2b;
+  --muted: #5f6478;
+  --line: #e6e7ef;
+  --g-tk: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%);
+  --g-ks: linear-gradient(135deg, #f43f5e 0%, #f59e0b 100%);
+  --g-sh: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+  --g-ks2: linear-gradient(135deg, #d946ef 0%, #f97316 100%);
+  --g-brand: linear-gradient(120deg, #6366f1 0%, #d946ef 50%, #f97316 100%);
+  --c-tk: #4f46e5; --c-ks: #e11d48; --c-sh: #059669; --c-ks2: #c026d3;
+  --ok: #059669; --now: #e11d48; --wait: #d97706; --none: #64748b;
+  --radius: 20px;
+  --shadow: 0 10px 30px -12px rgba(40, 30, 90, .25);
+  --font-display: "Bai Jamjuree", "Noto Sans Thai", system-ui, sans-serif;
+  --font-body: "Noto Sans Thai", system-ui, -apple-system, sans-serif;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 64px; }
+body {
+  margin: 0; color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.6;
+  background:
+    radial-gradient(60vw 50vw at 0% 30%, rgba(99, 102, 241, .10), transparent 70%),
+    radial-gradient(50vw 50vw at 100% 55%, rgba(244, 63, 94, .08), transparent 70%),
+    radial-gradient(60vw 40vw at 30% 95%, rgba(16, 185, 129, .08), transparent 70%),
+    var(--bg);
+}
+img { max-width: 100%; display: block; }
+a { color: var(--c-tk); }
+h1, h2, h3, h4 { font-family: var(--font-display); line-height: 1.2; text-wrap: balance; margin: 0; }
+h2 { font-size: clamp(1.6rem, 4vw, 2.3rem); }
+h3 { font-size: 1.2rem; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.eyebrow { margin: 0 0 4px; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.grad { background: var(--g-brand); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.fine { font-size: .8rem; color: var(--muted); }
+:focus-visible { outline: 3px solid #a5b4fc; outline-offset: 2px; border-radius: 8px; }
+[hidden] { display: none !important; }
+
+/* nav */
+nav.top { position: sticky; top: 0; z-index: 50; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  background: rgba(247, 247, 251, .78); border-bottom: 1px solid var(--line); padding-top: env(safe-area-inset-top, 0px); }
+nav.top .wrap { display: flex; align-items: center; gap: 16px; height: 56px; }
+.brand { font-family: var(--font-display); font-weight: 700; color: var(--ink); text-decoration: none; white-space: nowrap; }
+.links { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; margin-left: auto; }
+.links a { color: var(--muted); text-decoration: none; font-size: .9rem; padding: 6px 12px; border-radius: 999px; white-space: nowrap; }
+.links a:hover { background: var(--surface); color: var(--ink); }
+.links a.pres { background: var(--g-brand); color: #fff; font-weight: 600; }
+
+/* hero */
+.hero { position: relative; color: #fff; overflow: hidden; padding-bottom: 28px; }
+.hero-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.hero::before { content: ""; position: absolute; inset: 0; z-index: 1;
+  background: linear-gradient(160deg, rgba(79, 70, 229, .55) 0%, rgba(217, 70, 239, .35) 45%, rgba(23, 26, 43, .75) 100%); }
+.hero > :not(.hero-img) { position: relative; z-index: 2; }
+.hero-in { padding-block: clamp(64px, 12vw, 140px) 32px; }
+.hero .eyebrow { color: rgba(255, 255, 255, .85); }
+.hero h1 { font-size: clamp(2.4rem, 8vw, 4.8rem); font-weight: 700; letter-spacing: -.01em; }
+.hero h1 .grad { background: linear-gradient(120deg, #fde68a, #fbcfe8, #a5f3fc); -webkit-background-clip: text; background-clip: text; }
+.hero-sub { margin: 8px 0 24px; font-size: 1.05rem; opacity: .92; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 12px 20px; border-radius: 999px; font-weight: 600; text-decoration: none;
+  font-family: var(--font-display); transition: transform .15s ease, box-shadow .15s ease; }
+.btn:hover { transform: translateY(-2px); }
+.btn.primary { background: #fff; color: var(--ink); box-shadow: 0 8px 24px rgba(0, 0, 0, .25); }
+.btn.glass { background: rgba(255, 255, 255, .16); color: #fff; border: 1px solid rgba(255, 255, 255, .45); backdrop-filter: blur(8px); }
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.fact { background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .3); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-radius: 16px; padding: 12px 14px; display: grid; }
+.fact b { font-family: var(--font-display); font-size: 1.9rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.fact span { font-size: .82rem; opacity: .9; }
+
+main > section { padding-block: 56px 8px; }
+.sec-head { margin-bottom: 18px; }
+
+/* 3D tour */
+.tour { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 16px; align-items: stretch; }
+.map-frame { position: relative; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); min-height: 520px;
+  background: var(--g-tk); }
+#map3d { position: absolute; inset: 0; }
+#map3d.nomap::after { content: "เครื่องนี้แสดงแผนที่ 3D ไม่ได้ — กดจุดด้านล่างดูการ์ดแทน"; padding: 24px; text-align: center; position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-weight: 600; }
+.map-ctl { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); display: flex; gap: 6px; z-index: 5;
+  background: rgba(255, 255, 255, .85); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 6px; border-radius: 999px; box-shadow: var(--shadow); }
+.map-ctl button { font: inherit; border: 0; background: transparent; color: var(--ink); padding: 8px 12px; border-radius: 999px; cursor: pointer; font-weight: 600; }
+.map-ctl button:hover { background: #eef0ff; }
+.map-ctl .play { background: var(--g-brand); color: #fff; padding-inline: 18px; }
+.map-ctl .play.on { background: #171a2b; }
+.pin { border: 0; padding: 0; background: none; cursor: pointer; display: grid; justify-items: center; }
+.pin img { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; box-shadow: 0 4px 14px rgba(0, 0, 0, .35); transition: transform .2s; }
+.pin b { margin-top: -10px; min-width: 22px; height: 22px; border-radius: 999px; color: #fff; font-size: .75rem; display: grid; place-items: center; padding: 0 6px; border: 2px solid #fff; }
+.pin:hover img { transform: scale(1.12); }
+.pin.tk b { background: var(--g-tk); } .pin.ks b { background: var(--g-ks); } .pin.sh b { background: var(--g-sh); } .pin.ks2 b { background: var(--g-ks2); }
+.tcards { min-width: 0; }
+.tcard { background: var(--surface); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); height: 100%; display: flex; flex-direction: column;
+  animation: rise .35s ease-out; }
+.tcard-img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
+.tcard-body { padding: 16px 18px 18px; display: grid; gap: 8px; position: relative; }
+.tcard-body::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 4px; }
+.tcard.tk .tcard-body::before { background: var(--g-tk); } .tcard.ks .tcard-body::before { background: var(--g-ks); }
+.tcard.sh .tcard-body::before { background: var(--g-sh); } .tcard.ks2 .tcard-body::before { background: var(--g-ks2); }
+.tcard h3 { font-size: 1.4rem; }
+.tcard p { margin: 0; color: var(--muted); }
+.link { font-weight: 600; text-decoration: none; }
+.stops { position: relative; display: flex; gap: 10px; overflow-x: auto; padding: 14px 2px 6px; scrollbar-width: thin; }
+.stop { flex: none; position: relative; border: 0; padding: 0; background: none; cursor: pointer; border-radius: 16px; }
+.stop img { width: 72px; height: 72px; border-radius: 16px; object-fit: cover; opacity: .7; transition: opacity .2s, transform .2s; }
+.stop span { position: absolute; left: 6px; top: 6px; min-width: 22px; height: 22px; border-radius: 999px; color: #fff; font-size: .75rem; font-weight: 700; display: grid; place-items: center; }
+.stop.tk span { background: var(--g-tk); } .stop.ks span { background: var(--g-ks); } .stop.sh span { background: var(--g-sh); } .stop.ks2 span { background: var(--g-ks2); }
+.stop:hover img { opacity: 1; }
+.stop.on img { opacity: 1; transform: translateY(-3px); box-shadow: 0 0 0 3px #fff, 0 0 0 6px #a5b4fc; }
+
+/* shared highlight list */
+.hl { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.hl li { display: grid; grid-template-columns: 24px 52px 1fr; gap: 6px; align-items: baseline; font-size: .95rem; }
+.hl .tm { font-variant-numeric: tabular-nums; color: var(--muted); font-size: .85rem; }
+
+/* day picker */
+.dchips { position: relative; display: flex; gap: 8px; overflow-x: auto; padding: 4px 2px 10px; scrollbar-width: none; }
+.dchip { flex: none; width: 58px; padding: 8px 0; border-radius: 16px; border: 1px solid var(--line); background: var(--surface); cursor: pointer;
+  display: grid; justify-items: center; font: inherit; color: var(--ink); transition: transform .15s; }
+.dchip b { font-family: var(--font-display); font-size: 1.35rem; line-height: 1.1; }
+.dchip span { font-size: .75rem; color: var(--muted); }
+.dchip:hover { transform: translateY(-2px); }
+.dchip.on { border-color: transparent; color: #fff; box-shadow: var(--shadow); }
+.dchip.on span { color: rgba(255, 255, 255, .9); }
+.dchip.tk.on { background: var(--g-tk); } .dchip.ks.on { background: var(--g-ks); } .dchip.sh.on { background: var(--g-sh); } .dchip.ks2.on { background: var(--g-ks2); }
+.dchip.tk { border-bottom: 3px solid var(--c-tk); } .dchip.ks { border-bottom: 3px solid var(--c-ks); }
+.dchip.sh { border-bottom: 3px solid var(--c-sh); } .dchip.ks2 { border-bottom: 3px solid var(--c-ks2); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: .82rem; color: var(--muted); margin-bottom: 14px; }
+.legend i { display: inline-block; width: 18px; height: 8px; border-radius: 4px; margin-right: 6px; vertical-align: middle; }
+.legend .tk i { background: var(--g-tk); } .legend .ks i { background: var(--g-ks); } .legend .sh i { background: var(--g-sh); } .legend .ks2 i { background: var(--g-ks2); }
+.day { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); background: var(--surface); border-radius: var(--radius); overflow: hidden;
+  box-shadow: var(--shadow); animation: rise .35s ease-out; }
+.day-media { position: relative; min-height: 280px; }
+.day-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.day-img.blank { display: grid; place-items: center; font-size: 4rem; color: #fff; }
+.day.tk .day-img.blank { background: var(--g-tk); } .day.ks2 .day-img.blank { background: var(--g-ks2); }
+.day-n { position: absolute; left: 14px; top: 14px; color: #fff; font-family: var(--font-display); font-weight: 700; padding: 6px 14px; border-radius: 999px; }
+.day.tk .day-n { background: var(--g-tk); } .day.ks .day-n { background: var(--g-ks); } .day.sh .day-n { background: var(--g-sh); } .day.ks2 .day-n { background: var(--g-ks2); }
+.day-body { padding: 22px 24px; display: grid; gap: 12px; align-content: start; min-width: 0; }
+.day h3 { font-size: 1.5rem; }
+.stay { margin: 0; font-size: .9rem; color: var(--muted); }
+details.more { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 4px; }
+details.more > summary { cursor: pointer; font-weight: 600; color: var(--c-tk); list-style: none; padding: 6px 0; }
+details.more > summary::-webkit-details-marker { display: none; }
+details.more > summary::before { content: "＋ "; }
+details.more[open] > summary::before { content: "－ "; }
+.full { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 10px; }
+.full li { display: grid; grid-template-columns: 52px 1fr; gap: 8px; font-size: .92rem; }
+.full .tm { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--muted); }
+.bnote { font-size: .82rem; color: var(--muted); margin-top: 2px; }
+.bnote.warn { color: #b45309; background: #fff7ed; border-radius: 8px; padding: 4px 8px; }
+
+/* panels */
+.bgrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 16px; align-items: start; }
+.side { display: grid; gap: 16px; min-width: 0; }
+.panel { background: var(--surface); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); min-width: 0; }
+.panel > h3 { margin: 4px 0 10px; }
+.panel > h3 + h3, .panel details + h3 { margin-top: 18px; }
+.panel.done { background: var(--g-sh); color: #fff; }
+.panel.done a { color: #fff; }
+.donelist { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.donelist li { display: grid; grid-template-columns: 28px 1fr; gap: 8px; }
+.donelist small { display: block; opacity: .85; font-size: .82rem; }
+.ok { width: 26px; height: 26px; border-radius: 50%; background: rgba(255, 255, 255, .25); display: grid; place-items: center; font-weight: 700; }
+.chip { display: inline-block; font-size: .8rem; font-weight: 600; padding: 3px 12px; border-radius: 999px; color: #fff; font-family: var(--font-body); }
+.chip.now { background: var(--g-ks); } .chip.wait { background: linear-gradient(135deg, #f59e0b, #facc15); color: #422006; } .chip.none { background: #e2e8f0; color: #334155; }
+.bk { border-radius: 14px; padding: 10px 12px; margin-bottom: 8px; background: #fafaff; border: 1px solid var(--line); }
+.bk > summary { cursor: pointer; list-style: none; display: grid; gap: 2px; }
+.bk > summary::-webkit-details-marker { display: none; }
+.bk-t { font-weight: 600; }
+.bk-d { font-size: .82rem; color: var(--muted); }
+.bk-d em { font-style: normal; font-weight: 600; }
+.bk.now .bk-d em { color: var(--now); } .bk.wait .bk-d em { color: var(--wait); }
+.bk[open] { background: var(--surface); box-shadow: var(--shadow); }
+.bk dl { display: grid; grid-template-columns: 70px 1fr; gap: 4px 10px; margin: 10px 0 6px; font-size: .88rem; }
+.bk dt { color: var(--muted); }
+.bk dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.bk-n { font-size: .85rem; color: var(--muted); margin: 0; }
+.tw { overflow-x: auto; }
+table.cost { width: 100%; border-collapse: collapse; font-size: .9rem; }
+table.cost td { padding: 6px 4px; border-bottom: 1px solid var(--line); }
+table.cost .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+table.cost .tot td { font-weight: 700; border-bottom: 0; }
+
+/* checklist */
+.check { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.check label { display: grid; grid-template-columns: 28px 1fr; gap: 10px; padding: 10px 8px; border-radius: 12px; cursor: pointer; }
+.check label:hover { background: #f5f5ff; }
+.check input { position: absolute; opacity: 0; pointer-events: none; }
+.check .box { width: 24px; height: 24px; border-radius: 8px; border: 2px solid #c7c9d9; display: grid; place-items: center; transition: all .15s; margin-top: 2px; }
+.check li.hi .box { border-color: var(--now); }
+.check input:checked + .box { background: var(--g-sh); border-color: transparent; }
+.check input:checked + .box::after { content: "✓"; color: #fff; font-weight: 700; font-size: .85rem; }
+.check input:checked ~ .txt { opacity: .45; text-decoration: line-through; }
+.check input:focus-visible + .box { outline: 3px solid #a5b4fc; outline-offset: 2px; }
+.check .txt { min-width: 0; }
+.check small { display: block; color: var(--muted); font-size: .82rem; }
+.due { display: inline-block; margin-left: 8px; font-size: .75rem; font-weight: 600; color: #fff; background: var(--g-ks); padding: 1px 8px; border-radius: 999px; vertical-align: middle; }
+.panel.grad-ks { background: var(--g-ks); color: #fff; }
+.timeline { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.timeline li { display: grid; grid-template-columns: 64px 56px 1fr; gap: 6px; align-items: baseline; font-size: .92rem; }
+.timeline b { font-family: var(--font-display); }
+.timeline .tm { font-variant-numeric: tabular-nums; opacity: .85; }
+.qs { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.tips { margin: 6px 0 0; padding-left: 1.2em; display: grid; gap: 6px; }
+.pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; margin-top: 8px; }
+.pg { background: var(--surface); border-radius: 16px; padding: 14px; box-shadow: var(--shadow); min-width: 0; }
+.pg h4 { font-size: 1rem; margin-bottom: 6px; }
+.pg ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.pg small { display: block; color: var(--muted); font-size: .8rem; }
+#todo > details.more { margin-top: 16px; }
+
+footer { padding-block: 48px calc(32px + env(safe-area-inset-bottom, 0px)); color: var(--muted); font-size: .88rem; }
+footer a { color: inherit; }
+
+@keyframes rise { from { opacity: .4; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } html { scroll-behavior: auto; } }
+
+@media (max-width: 900px) {
+  .tour { grid-template-columns: minmax(0, 1fr); }
+  .map-frame { min-height: 420px; }
+  .bgrid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 640px) {
+  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .day { grid-template-columns: minmax(0, 1fr); }
+  .day-media { min-height: 200px; }
+  .map-frame { min-height: 360px; }
+  nav.top .wrap { gap: 10px; }
+  .brand { font-size: .9rem; }
+  .links { mask-image: linear-gradient(90deg, #000 85%, transparent); -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); padding-right: 24px; }
+  .links a { padding: 6px 10px; font-size: .85rem; }
+  .tcard-img { aspect-ratio: 16 / 8; }
+}
+
+/* budget */
+.panel.grad-brand { background: var(--g-brand); color: #fff; display: grid; gap: 10px; align-content: start; }
+.panel.grad-brand .eyebrow { color: rgba(255, 255, 255, .85); }
+.budget .big { font-family: var(--font-display); font-size: clamp(2.2rem, 6vw, 3.2rem); font-weight: 700; margin: 0; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.budget .sub { margin: 0; opacity: .92; }
+.sbar { display: flex; height: 14px; border-radius: 999px; overflow: hidden; background: rgba(255, 255, 255, .2); }
+.sbar i { display: block; height: 100%; }
+.sbar .paid, .bkey.paid span { background: #a7f3d0; } .sbar .booked, .bkey.booked span { background: #fde68a; } .sbar .est, .bkey.est span { background: rgba(255, 255, 255, .55); }
+.bkeys { display: grid; gap: 8px; }
+.bkey { display: grid; grid-template-columns: 14px 1fr; gap: 10px; align-items: center; }
+.bkey span { width: 14px; height: 14px; border-radius: 4px; }
+.bkey b { font-variant-numeric: tabular-nums; }
+.bkey small { display: block; opacity: .85; font-size: .8rem; }
+.fine.light { color: rgba(255, 255, 255, .8); }
+.btable { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.btable th { text-align: left; font-size: .78rem; color: var(--muted); font-weight: 600; padding: 0 6px 8px; border-bottom: 2px solid var(--line); }
+.btable td { padding: 10px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.btable td small { display: block; color: var(--muted); font-size: .8rem; }
+.btable td small.n { font-size: .75rem; opacity: .85; }
+.btable .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.btable tfoot td { font-weight: 700; border-bottom: 0; padding-top: 12px; }
+.btable tfoot tr + tr td { font-weight: 600; color: var(--muted); padding-top: 2px; }
+.st { display: inline-block; font-size: .72rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.st.paid { background: #d1fae5; color: #065f46; } .st.booked { background: #fef3c7; color: #92400e; } .st.est { background: #eef0f6; color: #475569; }
+table.cost td:nth-child(3) { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--muted); }
+@media (max-width: 640px) { .btable th:nth-child(4), .btable td:nth-child(4) { display: none; } }
+
+/* discuss page */
+.mini-hero { background: var(--g-brand); color: #fff; padding-block: 48px 40px; }
+.mini-hero .eyebrow { color: rgba(255, 255, 255, .85); }
+.mini-hero h1 { font-size: clamp(2rem, 6vw, 3.4rem); }
+.mini-hero .grad { background: linear-gradient(120deg, #fde68a, #fbcfe8, #a5f3fc); -webkit-background-clip: text; background-clip: text; }
+.mini-hero p { margin: 8px 0 0; opacity: .92; }
+.lede { color: var(--muted); margin: 8px 0 0; max-width: 70ch; }
+.plans { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+.plan { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; display: grid; gap: 12px; align-content: start;
+  border: 2px solid transparent; cursor: pointer; transition: transform .15s, border-color .15s; position: relative; overflow: hidden; }
+.plan::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; }
+.plan.tk::before, .plan.tk .pbar i, .plan.tk .pid { background: var(--g-tk); }
+.plan.sh::before, .plan.sh .pbar i, .plan.sh .pid { background: var(--g-sh); }
+.plan.ks::before, .plan.ks .pbar i, .plan.ks .pid { background: var(--g-ks); }
+.plan:hover { transform: translateY(-3px); }
+.plan.on { border-color: #a5b4fc; }
+.plan header { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: center; }
+.pid { width: 44px; height: 44px; border-radius: 14px; color: #fff; display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: 1.3rem; }
+.plan h3 { font-size: 1.15rem; }
+.plan header p { margin: 2px 0 0; font-size: .85rem; color: var(--muted); }
+.rec { display: inline-block; font-size: .72rem; font-family: var(--font-body); background: linear-gradient(135deg, #f59e0b, #facc15); color: #422006; padding: 2px 8px; border-radius: 999px; vertical-align: middle; }
+.ptotal { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.ptotal b { font-family: var(--font-display); font-size: 2rem; font-variant-numeric: tabular-nums; }
+.ptotal span { color: var(--muted); font-size: .9rem; }
+.diff { font-size: .8rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+.diff.up { background: #ffe4e6; color: #be123c; } .diff.down { background: #d1fae5; color: #065f46; }
+.pbar { height: 10px; border-radius: 999px; background: #eef0f6; overflow: hidden; }
+.pbar i { display: block; height: 100%; border-radius: inherit; }
+.pall { margin: 0; font-size: .9rem; color: var(--muted); }
+.pall b { color: var(--ink); }
+.pros, .cons { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: .9rem; }
+.pros li::before { content: "＋ "; color: var(--ok); font-weight: 700; }
+.cons li::before { content: "－ "; color: var(--now); font-weight: 700; }
+.plan .cost td:last-child { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.plan sup, .fine sup { color: var(--wait); }
+table.cmp { width: 100%; border-collapse: collapse; font-size: .9rem; min-width: 640px; }
+.cmp th, .cmp td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.cmp thead th { font-size: .8rem; color: var(--muted); }
+.cmp tbody th { font-weight: 600; white-space: nowrap; }
+.cmp .on { background: #eef0ff; }
+.note-v { background: #fff7ed; border-radius: 12px; padding: 10px 14px; margin: 14px 0 6px; font-size: .92rem; }
+.topics { list-style: none; margin: 0 0 12px; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.topic { display: grid; grid-template-columns: 36px 1fr; gap: 12px; align-items: start; }
+.topic p { margin: 0; }
+.qn { width: 32px; height: 32px; border-radius: 10px; background: var(--g-brand); color: #fff; display: grid; place-items: center; font-weight: 700; }
+@media (max-width: 900px) { .plans, .topics { grid-template-columns: minmax(0, 1fr); } }
+
+/* plan comparison: time + highlighted differences */
+.kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.kpis > div { background: #f7f7fc; border-radius: 14px; padding: 10px 12px; display: grid; gap: 2px; align-content: start; }
+.kpis span { font-size: .75rem; color: var(--muted); }
+.kpis b { font-family: var(--font-display); font-size: 1.25rem; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.kpis small { color: var(--muted); font-size: .8rem; }
+.kpis .dl { justify-self: start; }
+.dl { display: inline-block; font-size: .74rem; font-weight: 700; padding: 1px 7px; border-radius: 999px; margin: 2px 4px 0 0; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.dl.up { background: #ffe4e6; color: #be123c; } .dl.down { background: #d1fae5; color: #065f46; }
+table.cmp { min-width: 820px; }
+.cmp tbody th, .cmp tfoot th { width: 150px; }
+.cmp tbody th b { display: block; font-size: .85rem; }
+.cmp tbody th span { display: block; font-weight: 400; color: var(--muted); font-size: .82rem; }
+.cmp td .how { font-size: .86rem; }
+.cmp td .cm { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; font-size: .82rem; color: var(--muted); }
+.cmp td .cm b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.cmp td.chg { background: linear-gradient(135deg, rgba(244, 63, 94, .07), rgba(245, 158, 11, .10)); box-shadow: inset 3px 0 0 #f59e0b; }
+.cmp td.dup { color: var(--muted); opacity: .6; }
+.cmp td.na { color: var(--muted); text-align: center; }
+.cmp tfoot td, .cmp tfoot th { border-top: 2px solid var(--line); border-bottom: 0; padding-top: 12px; font-size: .9rem; }
+.cmp td.on { outline: 2px solid #a5b4fc; outline-offset: -2px; }
+.legend2 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: .8rem; color: var(--muted); margin: 0 0 10px; }
+.sw { display: inline-block; width: 16px; height: 12px; border-radius: 4px; }
+.sw.chg { background: linear-gradient(135deg, rgba(244, 63, 94, .25), rgba(245, 158, 11, .35)); }
+.sw.dup { background: #eef0f6; }
+.links a.talk { background: #fff1f2; color: #be123c; font-weight: 600; }
+html, body { overflow-x: hidden; }
+.hero-sub { overflow-wrap: anywhere; }
+@media (max-width: 640px) { .fact b { font-size: 1.5rem; } .hero-actions .btn { padding: 10px 16px; font-size: .92rem; } }
+
+/* flights — boarding-pass cards */
+#flights { margin-top: 36px; }
+.fpasses { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.fpass { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.fpass header { color: #fff; padding: 12px 18px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.fpass.tk header { background: var(--g-tk); } .fpass.ks2 header { background: var(--g-ks2); }
+.fpass header b { font-family: var(--font-display); font-size: 1.2rem; margin-left: auto; }
+.fpass header small { width: 100%; opacity: .85; }
+.fp-route { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px; padding: 16px 18px 8px; }
+.fp-end { display: grid; } .fp-end:last-child { text-align: right; }
+.fp-end b { font-family: var(--font-display); font-size: 1.8rem; line-height: 1; }
+.fp-tm { font-family: var(--font-display); font-weight: 700; font-size: 1.3rem; }
+.fp-end small { color: var(--muted); }
+.fp-mid { display: grid; justify-items: center; gap: 4px; color: var(--muted); font-size: .8rem; min-width: 70px; }
+.fp-mid i { display: block; width: 100%; height: 2px; background: repeating-linear-gradient(90deg, var(--line) 0 6px, transparent 6px 10px); position: relative; }
+.fp-mid i::after { content: "✈"; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -55%); font-style: normal; color: var(--ink); font-size: 1rem; }
+.fp-bag { margin: 0; padding: 8px 18px 16px; font-size: .85rem; color: var(--muted); border-top: 1px dashed var(--line); }
+@media (max-width: 640px) { .fpasses { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<nav class="top"><div class="wrap">
+  <a class="brand" href="overview.html">🇯🇵 ญี่ปุ่น ธ.ค. 69</a>
+  <div class="links"><a href="overview.html">← แผนหลัก</a><a href="#plans">เทียบแผน</a><a href="#topics">เรื่องอื่น</a><a class="pres" href="present.html">▶ พรีเซนต์</a></div>
+</div></nav>
+<header class="mini-hero"><div class="wrap">
+  <p class="eyebrow">ยังไม่ตกลง · คุยกันวันที่ 31 ต.ค.</p>
+  <h1>เรื่องที่ต้อง<span class="grad">คุยกัน</span></h1>
+  <p>สรุปทางเลือกพร้อมราคา ตัดสินใจแล้วค่อยย้ายเข้าแผนหลัก</p>
+</div></header>
+<main>
+
+<section class="wrap" id="plans">
+  <div class="sec-head"><p class="eyebrow">เรื่องใหญ่ที่ต้องตัดสินใจ · กดการ์ดเพื่อไฮไลต์</p><h2>เทียบแผนการเดินทาง</h2>
+    <p class="lede">ต่อคน · เฉพาะค่าเดินทางที่ต่างกันระหว่างแผน · เวลา = ประมาณเวลาเดินทางจริงรวมต่อรถ (ไม่รวมเวลาเที่ยว) · ทุกแผนใช้โรงแรมและเที่ยวบินเดิม</p></div>
+  <div class="plans">
+    <article class="plan tk" data-plan="A" tabindex="0">
+      <header><span class="pid">A</span><div><h3>แผนเดิม </h3><p>ตั๋วแยก + รถเช่าจาก Ueno</p></div></header>
+      <div class="kpis">
+        <div><span>ค่าเดินทาง / คน</span><b>¥62,827</b><small>฿13,194</small></div>
+        <div><span>เวลาเดินทางรวม</span><b>20 ชม. 33 นาที</b><small>ต่อรถ 4 ครั้ง</small></div>
+      </div>
+      <div class="pbar"><i style="width:86%"></i></div>
+      <p class="pall">รวม 4 คน ¥251,308 · <b>฿52,775</b></p>
+      <ul class="pros"><li>ยืดหยุ่นที่สุดวันฟูจิ แวะได้ทุกจุดตามใจ</li><li>ไม่ต้องคิดเรื่องพาส ใช้ smartEX จองง่าย</li><li>ถึง Takayama เร็ว 10:58 เลือกรถบัส 11:50 ได้</li></ul>
+      <ul class="cons"><li>ขับรถออกจากโตเกียว ~2 ชม. ต่อทาง ทั้งทางด่วน Shuto และถนนหน้าหนาว</li><li>เปลี่ยนรถที่ Nagoya ทั้งไปและกลับ</li><li>ต้องออกจากโรงแรม 06:45 วันที่ 7</li></ul>
+      
+    </article>
+    <article class="plan sh" data-plan="B" tabindex="0">
+      <header><span class="pid">B</span><div><h3>JR Pass </h3><p>JR Pass 7 วัน (2–8 ธ.ค.) + รถไฟไปฟูจิ + เช่ารถที่ Kawaguchiko</p></div></header>
+      <div class="kpis">
+        <div><span>ค่าเดินทาง / คน</span><b>¥72,710</b><small>฿15,269</small><span class="dl up">+¥9,883</span></div>
+        <div><span>เวลาเดินทางรวม</span><b>22 ชม. 8 นาที</b><small>ต่อรถ 7 ครั้ง</small><span class="dl up">+1 ชม. 35 นาที</span></div>
+      </div>
+      <div class="pbar"><i style="width:100%"></i></div>
+      <p class="pall">รวม 4 คน ¥290,840 · <b>฿61,076</b></p>
+      <ul class="pros"><li>ไม่ต้องขับรถในโตเกียว ขับแค่รอบทะเลสาบ</li><li>ขึ้นรถไฟ JR ได้ไม่จำกัด 7 วัน ไม่ต้องจองทีละขา</li><li>รถไฟเที่ยว Kyoto/Nara สาย JR ก็ฟรี (ถ้าเปลี่ยนเส้นทางมาใช้ JR)</li></ul>
+      <ul class="cons"><li>แพงสุด เพราะ JR Pass ขึ้นราคาเป็น ¥53,000</li><li>Fuji Excursion วันละไม่กี่เที่ยว ต้องจองให้ทัน · ร้านเช่ารถ Kawaguchiko เปิด 08:00–19:00</li><li>NRT → Ueno ต้องนั่ง N&#x27;EX แล้วต่อรถ (~1 ชม. 20 นาที แทน 41 นาที)</li></ul>
+      <p class="fine">ถ้าอยากนั่ง Nozomi วันที่ 4 ต้องจ่ายเพิ่ม ¥4,960/คน (หรือนั่ง Hikari ฟรี ช้ากว่า ~25 นาที)</p>
+    </article>
+    <article class="plan ks" data-plan="C" tabindex="0">
+      <header><span class="pid">C</span><div><h3>แผนใหม่ (optimize) <span class="rec">⭐ แนะนำ</span></h3><p>ช่วงโตเกียวเหมือนเดิม + Takayama-Hokuriku Pass 5 วัน (6–10 ธ.ค.)</p></div></header>
+      <div class="kpis">
+        <div><span>ค่าเดินทาง / คน</span><b>¥57,097</b><small>฿11,990</small><span class="dl down">−¥5,730</span></div>
+        <div><span>เวลาเดินทางรวม</span><b>21 ชม. 19 นาที</b><small>ต่อรถ 4 ครั้ง</small><span class="dl up">+46 นาที</span></div>
+      </div>
+      <div class="pbar"><i style="width:79%"></i></div>
+      <p class="pall">รวม 4 คน ¥228,388 · <b>฿47,961</b></p>
+      <ul class="pros"><li>ถูกสุด ประหยัด ~¥5,700/คน จากแผนเดิม</li><li>วันที่ 7 นั่ง Hida 25 ตรงจาก Osaka 07:58 ไม่ต้องเปลี่ยนรถที่ Nagoya ตื่นสายขึ้น</li><li>พาสรวมรถบัส Shirakawago และ JR ไปสนามบิน KIX วันสุดท้าย</li></ul>
+      <ul class="cons"><li>Hida 25 มีวันละเที่ยวเดียว ถึง Takayama 12:14 (ช้ากว่าเดิม ~1 ชม.) → ต้องขึ้นรถบัส 12:50 รอบ 11:50 ไม่ทัน</li><li>ถ้า Hida งดวิ่ง (ข่าวขาดขบวน HC85) จะกระทบหนักกว่า</li><li>รถบัส Shirakawago ยังต้องจองที่นั่งแยก · ไปสนามบินต้องขึ้น HARUKA ที่ Tennoji</li></ul>
+      <p class="fine">ถ้าขากลับนั่ง Hida เที่ยวตรงเข้า Osaka ได้ จะประหยัดเพิ่ม ¥6,680/คน (ยังไม่ได้เช็คเวลา)</p>
+    </article>
+  </div>
+  <div class="panel"><h3>วันต่อวัน: ค่ารถ · เวลา · จุดต่างจากแผนเดิม</h3>
+    <p class="legend2"><span class="sw chg"></span>ต่างจากแผน A <span class="sw dup"></span>เหมือนแผน A <span class="dl down">−</span> ถูกกว่า/เร็วกว่า <span class="dl up">+</span> แพงกว่า/ช้ากว่า</p>
+    <div class="tw"><table class="cmp"><thead><tr><th>วัน</th><th data-plan="A">A · แผนเดิม</th><th data-plan="B">B · JR Pass</th><th data-plan="C">C · แผนใหม่ (optimize)</th></tr></thead>
+    <tbody><tr><th><b>ก่อนเดินทาง</b><span>ซื้อพาส</span></th><td data-plan="A" class="na">—</td><td data-plan="B" class="chg"><div class="how">JR Pass 7 วัน ใช้ 2–8 ธ.ค. <sup>*</sup></div><div class="cm"><b>¥53,000</b></div><div class="bd"><span class="dl up">+¥53,000</span></div></td><td data-plan="C" class="chg"><div class="how">Takayama-Hokuriku Pass 5 วัน ใช้ 6–10 ธ.ค. <sup>*</sup></div><div class="cm"><b>¥19,800</b></div><div class="bd"><span class="dl up">+¥19,800</span></div></td></tr><tr><th><b>พ. 2 ธ.ค.</b><span>NRT → Ueno</span></th><td data-plan="A" class=""><div class="how">Skyliner ตรง Keisei-Ueno</div><div class="cm"><b>¥2,580</b><span class="m">⏱ 1 ชม. </span></div><div class="bd"></div></td><td data-plan="B" class="chg"><div class="how">N&#x27;EX → Tokyo → ต่อ JR ไป Ueno (พาส)</div><div class="cm"><b>รวมในพาส</b><span class="m">⏱ 1 ชม. 20 นาที</span><span class="m">🔁 1</span></div><div class="bd"><span class="dl down">−¥2,580</span><span class="dl up">+20 นาที</span></div></td><td data-plan="C" class="dup"><div class="how">Skyliner ตรง Keisei-Ueno</div><div class="cm"><b>¥2,580</b><span class="m">⏱ 1 ชม. </span></div><div class="bd"></div></td></tr><tr><th><b>พฤ. 3 ธ.ค.</b><span>ไป-กลับฟูจิ</span></th><td data-plan="A" class=""><div class="how">ขับรถเช่าจาก Ueno (จองแล้ว) (ทางด่วน + น้ำมัน หาร 4)</div><div class="cm"><b>¥6,317</b><span class="m">⏱ 4 ชม. </span></div><div class="bd"></div></td><td data-plan="B" class="chg"><div class="how">Ueno → Shinjuku → Fuji Excursion (จ่ายส่วน Fujikyu) + เช่ารถ Kawaguchiko <sup>*</sup></div><div class="cm"><b>¥6,140</b><span class="m">⏱ 4 ชม. 40 นาที</span><span class="m">🔁 2</span></div><div class="bd"><span class="dl down">−¥177</span><span class="dl up">+40 นาที</span></div></td><td data-plan="C" class="dup"><div class="how">ขับรถเช่าจาก Ueno (จองแล้ว) (ทางด่วน + น้ำมัน หาร 4)</div><div class="cm"><b>¥6,317</b><span class="m">⏱ 4 ชม. </span></div><div class="bd"></div></td></tr><tr><th><b>ศ. 4 ธ.ค.</b><span>Tokyo → Shin-Osaka</span></th><td data-plan="A" class=""><div class="how">Nozomi (smartEX)</div><div class="cm"><b>¥14,720</b><span class="m">⏱ 2 ชม. 40 นาที</span><span class="m">🔁 1</span></div><div class="bd"></div></td><td data-plan="B" class="chg"><div class="how">Hikari (พาส) · Nozomi +¥4,960</div><div class="cm"><b>รวมในพาส</b><span class="m">⏱ 3 ชม. 5 นาที</span><span class="m">🔁 1</span></div><div class="bd"><span class="dl down">−¥14,720</span><span class="dl up">+25 นาที</span></div></td><td data-plan="C" class="dup"><div class="how">Nozomi (smartEX)</div><div class="cm"><b>¥14,720</b><span class="m">⏱ 2 ชม. 40 นาที</span><span class="m">🔁 1</span></div><div class="bd"></div></td></tr><tr><th><b>จ. 7 ธ.ค.</b><span>โรงแรม Ebisu → Takayama</span></th><td data-plan="A" class=""><div class="how">ออก 06:45 · Shinkansen → Nagoya → Hida 3 · ถึง 10:58</div><div class="cm"><b>¥12,820</b><span class="m">⏱ 4 ชม. 13 นาที</span><span class="m">🔁 2</span></div><div class="bd"></div></td><td data-plan="B" class="chg"><div class="how">ออก 06:45 · เส้นทางเดิม (พาส) · ถึง 10:58</div><div class="cm"><b>รวมในพาส</b><span class="m">⏱ 4 ชม. 13 นาที</span><span class="m">🔁 2</span></div><div class="bd"><span class="dl down">−¥12,820</span></div></td><td data-plan="C" class="chg"><div class="how">ออก ~07:20 · Hida 25 ตรงจาก Osaka 07:58 (พาส) · ถึง 12:14</div><div class="cm"><b>รวมในพาส</b><span class="m">⏱ 4 ชม. 54 นาที</span><span class="m">🔁 1</span></div><div class="bd"><span class="dl down">−¥12,820</span><span class="dl up">+41 นาที</span></div></td></tr><tr><th><b>จ. 7 ธ.ค.</b><span>รถบัส Shirakawago ไป-กลับ</span></th><td data-plan="A" class=""><div class="how">Nohi Bus 12:50 / กลับ 16:15</div><div class="cm"><b>¥5,600</b><span class="m">⏱ 1 ชม. 55 นาที</span></div><div class="bd"></div></td><td data-plan="B" class="dup"><div class="how">Nohi Bus 12:50 / กลับ 16:15</div><div class="cm"><b>¥5,600</b><span class="m">⏱ 1 ชม. 55 นาที</span></div><div class="bd"></div></td><td data-plan="C" class="chg"><div class="how">Nohi Bus 12:50 / กลับ 16:15 (พาส · ต้องจองที่นั่ง)</div><div class="cm"><b>รวมในพาส</b><span class="m">⏱ 1 ชม. 55 นาที</span></div><div class="bd"><span class="dl down">−¥5,600</span></div></td></tr><tr><th><b>อ. 8 ธ.ค.</b><span>บัส + กระเช้า Shinhotaka</span></th><td data-plan="A" class=""><div class="how">Okuhida Value Ticket <sup>*</sup></div><div class="cm"><b>¥7,000</b><span class="m">⏱ 2 ชม. 41 นาที</span></div><div class="bd"></div></td><td data-plan="B" class="dup"><div class="how">Okuhida Value Ticket <sup>*</sup></div><div class="cm"><b>¥7,000</b><span class="m">⏱ 2 ชม. 41 นาที</span></div><div class="bd"></div></td><td data-plan="C" class="dup"><div class="how">Okuhida Value Ticket <sup>*</sup></div><div class="cm"><b>¥7,000</b><span class="m">⏱ 2 ชม. 41 นาที</span></div><div class="bd"></div></td></tr><tr><th><b>อ. 8 ธ.ค.</b><span>Takayama → Shin-Osaka</span></th><td data-plan="A" class=""><div class="how">Hida 14 14:46 → Nagoya → Nozomi · ถึง 18:10</div><div class="cm"><b>¥12,820</b><span class="m">⏱ 3 ชม. 24 นาที</span><span class="m">🔁 1</span></div><div class="bd"></div></td><td data-plan="B" class="chg"><div class="how">Hida 14 → Nagoya → Hikari (พาส) · ถึง ~18:20</div><div class="cm"><b>รวมในพาส</b><span class="m">⏱ 3 ชม. 34 นาที</span><span class="m">🔁 1</span></div><div class="bd"><span class="dl down">−¥12,820</span><span class="dl up">+10 นาที</span></div></td><td data-plan="C" class="chg"><div class="how">Hida 14 (พาส) → Nagoya → Nozomi จ่ายเอง · ถึง 18:10</div><div class="cm"><b>¥6,680</b><span class="m">⏱ 3 ชม. 24 นาที</span><span class="m">🔁 1</span></div><div class="bd"><span class="dl down">−¥6,140</span></div></td></tr><tr><th><b>พฤ. 10 ธ.ค.</b><span>โรงแรม → KIX</span></th><td data-plan="A" class=""><div class="how">Nankai จาก Shin-Imamiya</div><div class="cm"><b>¥970</b><span class="m">⏱ 40 นาที</span></div><div class="bd"></div></td><td data-plan="B" class="dup"><div class="how">Nankai (พาสหมดแล้ว)</div><div class="cm"><b>¥970</b><span class="m">⏱ 40 นาที</span></div><div class="bd"></div></td><td data-plan="C" class="chg"><div class="how">HARUKA จาก Tennoji (พาส)</div><div class="cm"><b>รวมในพาส</b><span class="m">⏱ 45 นาที</span><span class="m">🔁 1</span></div><div class="bd"><span class="dl down">−¥970</span><span class="dl up">+5 นาที</span></div></td></tr></tbody>
+    <tfoot><tr><th>รวมต่อคน</th><td data-plan="A"><b>¥62,827</b> · ฿13,194<br>⏱ 20 ชม. 33 นาที · 🔁 4<div class="bd"></div></td><td data-plan="B"><b>¥72,710</b> · ฿15,269<br>⏱ 22 ชม. 8 นาที · 🔁 7<div class="bd"><span class="dl up">+¥9,883</span><span class="dl up">+1 ชม. 35 นาที</span></div></td><td data-plan="C"><b>¥57,097</b> · ฿11,990<br>⏱ 21 ชม. 19 นาที · 🔁 4<div class="bd"><span class="dl down">−¥5,730</span><span class="dl up">+46 นาที</span></div></td></tr></tfoot></table></div>
+    <p class="note-v">💡 ถ้าที่บ้านไม่อยากขับรถออกจากโตเกียว: ใช้แผน C แต่ไปฟูจิด้วย Fuji Excursion (~¥8,260/คน ไป-กลับ) + เช่ารถที่ Kawaguchiko → ค่าใช้จ่ายรวมใกล้เคียงแผนเดิม</p>
+    <p class="fine"><sup>*</sup> ราคายังไม่ยืนยันจากเว็บทางการ · ⏱ เวลาโดยประมาณ (นั่งรถ + ต่อรถ + เดินในสถานี) · 🔁 จำนวนครั้งที่ต่อรถ · อัตรา ¥100 ≈ ฿21 · เช็คเมื่อ 2026-10-22<br>แหล่งข้อมูล: <a href="https://www.japan.travel/en/ca/news/price-increases-are-coming-to-the-nationwide-japan-rail-pass-2026/" target="_blank" rel="noopener">JR Pass ขึ้นราคา ต.ค. 2026 (JNTO)</a> · <a href="https://www.jrailpass.com/faq/nozomi-mizuho-shinkansen" target="_blank" rel="noopener">Nozomi supplement (JRailPass FAQ)</a> · <a href="https://www.jrpass.com/blog/fuji-excursion-limited-express-train-direct-travel-between-shinjuku-and-fuji" target="_blank" rel="noopener">Fuji Excursion + JR Pass</a> · <a href="https://www.jrpass.com/regional-passes/takayama-hokuriku-area-tourist-pass" target="_blank" rel="noopener">Takayama-Hokuriku Area Tourist Pass</a> · <a href="https://www.osakastation.com/limited-express-hida-gifu-gero-takayama/" target="_blank" rel="noopener">Hida 25 Osaka → Takayama</a> · <a href="https://www.enterprise.com/en/car-rental/locations/japan/yamanashi-kawaguchiko-station-j12v.html" target="_blank" rel="noopener">Enterprise Kawaguchiko Station</a></p>
+  </div>
+</section>
+
+<section class="wrap" id="topics">
+  <div class="sec-head"><p class="eyebrow">ตอบในวงครอบครัว</p><h2>เรื่องอื่นที่ยังไม่ตกลง</h2></div>
+  <ol class="topics"><li class="panel topic"><span class="qn">1</span><p>booking Ebisu เดิม (Triple Family 4 คืน 5–8 ธ.ค. ฿12,448) ยกเลิกแล้วใช่ไหม?</p></li><li class="panel topic"><span class="qn">2</span><p>มณฑลขับรถวันฟูจิ — ใบขับขี่สากลเล่มเดิม (ทริป เม.ย.) ยังไม่หมดอายุใช่ไหม?</p></li><li class="panel topic"><span class="qn">3</span><p>รถบัสไป Shirakawago: รอบ 12:50 ตามแผนแม่ หรือ 11:50 (ได้เวลาเดินเพิ่มก่อนมืด)?</p></li><li class="panel topic"><span class="qn">4</span><p>ประกัน: MSIG เหมือนเดิม หรือแบรนด์อื่น?</p></li></ol>
+  <details class="more"><summary>พักไว้ก่อน (ค่อยคุยทีหลัง)</summary><ul class="tips"><li>ค่าธรรมเนียม/ส่วนต่างเปลี่ยนวันกลับ (Trip.com 18 ก.ย.)</li><li>ข้อมูลฉุกเฉิน: ที่อยู่โรงแรมภาษาญี่ปุ่น · สถานทูต · เบอร์ประกัน</li><li>จองร้านเนื้อฮิดะเย็นวันที่ 7</li><li>เซฟแผนไว้ดูออฟไลน์</li><li>อุณหภูมิเฉลี่ยแต่ละเมือง</li></ul></details>
+</section>
+</main>
+<footer class="wrap"><p class="fine">อัปเดต 2026-10-22 · ข้อมูลจาก plans/itinerary.json</p></footer>
+<script>
+(function () {
+  var cards = [].slice.call(document.querySelectorAll('.plan'));
+  function pick(id) {
+    cards.forEach(function (c) { c.classList.toggle('on', c.dataset.plan === id); });
+    document.querySelectorAll('.cmp [data-plan]').forEach(function (td) { td.classList.toggle('on', td.dataset.plan === id); });
+  }
+  cards.forEach(function (c) {
+    c.addEventListener('click', function (ev) { if (!ev.target.closest('summary,a')) pick(c.dataset.plan); });
+    c.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') pick(c.dataset.plan); });
+  });
+})();
+</script>
+</body>
+</html>
